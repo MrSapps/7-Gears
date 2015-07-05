@@ -1296,8 +1296,55 @@ int main(int argc, char *argv[])
 
         nvgResetTransform(vg);
 
-        renderDemo(vg, 0.0f, 0.0f, 800.0f, 600.0f, 20.0f, 0, &data);
+        float w = 270.0f;
+        float h = 40.0f;
+     
+        // outline
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+        nvgRoundedRect(vg, 30.0f, 30.0f, w, h, 3.0f);
+        nvgFill(vg);
+    
+        // window fill
+        float pad1 = 3.0f;
+        nvgBeginPath(vg);
+        //nvgTranslate(vg, 6.0f, 6.0f);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgRoundedRect(vg, 30.0f + pad1, 30.0f + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
+        nvgFill(vg);
 
+        
+        // window fill
+        float pad2 = 4.0f;
+        nvgResetTransform(vg);
+        nvgTranslate(vg, pad2, pad2);
+        nvgBeginPath(vg);
+        NVGpaint paint = nvgLinearGradient(vg, 30.0f, 30.0f, w, h, nvgRGBA(0, 0, 155, 155), nvgRGBA(27, 27, 155, 255));
+        nvgFillPaint(vg, paint);
+
+     
+        nvgRoundedRect(vg, 30.0f, 30.0f, w - pad2 - pad2, h - pad2 - pad2, 3.0f);
+        nvgFill(vg);
+
+        nvgResetTransform(vg);
+        nvgTranslate(vg, 0.5f, 0.5f);
+
+        nvgFontSize(vg, 24.0f);
+        nvgFontBlur(vg, 0);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgText(vg, 40.0f, 55.0f, "\"C'mon newcomer.\nFollow me\"", NULL);
+
+        nvgResetTransform(vg);
+        nvgFontSize(vg, 24.0f);
+        nvgFontBlur(vg, 0);
+        nvgFillColor(vg, nvgRGBA(228, 228, 228, 255));
+        nvgText(vg, 40.0f, 55.0f, "\"C'mon newcomer.\nFollow me\"", NULL);
+
+
+        /*
+        //renderDemo(vg, 0.0f, 0.0f, 800.0f, 600.0f, 20.0f, 0, &data);
+
+        nvgFillColor(vg, nvgRGBA(127, 255, 255, 255));
 
         nvgTranslate(vg, 300.0f, 300.0f);
         angle = fmod( angle + 0.1f, 360.0f );
@@ -1310,7 +1357,7 @@ int main(int argc, char *argv[])
         nvgStrokeColor(vg, nvgRGBA(255, 0, 0, 100));
         nvgStrokeWidth(vg, 1.0f);
         nvgStroke(vg);
-
+        */
         
 
         nvgEndFrame(vg);
