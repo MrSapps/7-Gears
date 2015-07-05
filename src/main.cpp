@@ -1238,6 +1238,8 @@ int loadFonts(NVGcontext* vg)
     return 0;
 }
 
+#include <string>
+
 int main(int argc, char *argv[])
 {
     SDL_Window *window = NULL;
@@ -1287,6 +1289,14 @@ int main(int argc, char *argv[])
 
     DemoData data = {};
     
+    int r = 0;
+    int delay = 0;
+    bool up = true;
+
+    const static char kMsg[] = "\"C'mon newcomer.\nFollow me\"";
+    unsigned int txtPos = 0;
+    std::string msg;
+
     while (quit == 0)
     {
 
@@ -1295,26 +1305,55 @@ int main(int argc, char *argv[])
         nvgBeginFrame(vg, 800, 600, pxRatio);
 
         nvgResetTransform(vg);
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(r, 0, 0, 255));
+        if (up)
+        {
+            r += 2;
+            if (r >= 255)
+            {
+                up = false;
+                r = 255;
+            }
+        }
+        else
+        {
+            r -= 2;
+            if (r <= 0)
+            {
+                up = true;
+                r = 0;
+            }
+        }
+        nvgRect(vg, 0.0f, 0.0f, 800.0f, 600.0f);
+        nvgFill(vg);
+
 
         float w = 270.0f;
         float h = 40.0f;
      
-        // outline
+        // black outline
         nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
         nvgRoundedRect(vg, 30.0f, 30.0f, w, h, 3.0f);
         nvgFill(vg);
     
-        // window fill
-        float pad1 = 3.0f;
+        // white inner
+        float pad1 = 1.0f;
         nvgBeginPath(vg);
-        //nvgTranslate(vg, 6.0f, 6.0f);
+        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+        nvgRoundedRect(vg, 30.0f + pad1, 30.0f + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
+        nvgFill(vg);
+
+        // black inner
+        pad1 = 3.0f;
+        nvgBeginPath(vg);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
         nvgRoundedRect(vg, 30.0f + pad1, 30.0f + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
         nvgFill(vg);
 
-        
-        // window fill
+
+        // Gradient window fill
         float pad2 = 4.0f;
         nvgResetTransform(vg);
         nvgTranslate(vg, pad2, pad2);
@@ -1323,23 +1362,43 @@ int main(int argc, char *argv[])
         nvgFillPaint(vg, paint);
 
      
+        // Text
         nvgRoundedRect(vg, 30.0f, 30.0f, w - pad2 - pad2, h - pad2 - pad2, 3.0f);
         nvgFill(vg);
 
         nvgResetTransform(vg);
         nvgTranslate(vg, 0.5f, 0.5f);
 
+
         nvgFontSize(vg, 24.0f);
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgText(vg, 40.0f, 55.0f, "\"C'mon newcomer.\nFollow me\"", NULL);
+        nvgText(vg, 40.0f, 55.0f, msg.c_str(), NULL);
 
         nvgResetTransform(vg);
         nvgFontSize(vg, 24.0f);
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(228, 228, 228, 255));
-        nvgText(vg, 40.0f, 55.0f, "\"C'mon newcomer.\nFollow me\"", NULL);
+        nvgText(vg, 40.0f, 55.0f, msg.c_str(), NULL);
 
+        if (delay > 2)
+        {
+            delay = 0;
+            if (txtPos < _countof(kMsg))
+            {
+                msg += kMsg[txtPos];
+                txtPos++;
+            }
+            else
+            {
+                msg = "";
+                txtPos = 0;
+            }
+        }
+        else
+        {
+            delay++;
+        }
 
         /*
         //renderDemo(vg, 0.0f, 0.0f, 800.0f, 600.0f, 20.0f, 0, &data);
