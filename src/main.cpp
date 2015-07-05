@@ -1240,6 +1240,48 @@ int loadFonts(NVGcontext* vg)
 
 #include <string>
 
+namespace Menu
+{
+    void RenderWindow(NVGcontext* vg, int ix, int iy, int iw, int ih)
+    {
+        const float x = static_cast<float>(ix);
+        const float y = static_cast<float>(iy);
+        const float w = static_cast<float>(iw);
+        const float h = static_cast<float>(ih);
+
+        // black outline
+        nvgResetTransform(vg);
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgRoundedRect(vg, x, y, w, h, 3.0f);
+        nvgFill(vg);
+
+        // white inner
+        float pad1 = 1.0f;
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
+        nvgFill(vg);
+
+        // black inner
+        pad1 = 3.0f;
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
+        nvgFill(vg);
+
+        // Gradient window fill
+        float pad2 = 4.0f;
+        nvgResetTransform(vg);
+        nvgTranslate(vg, pad2, pad2);
+        nvgBeginPath(vg);
+        NVGpaint paint = nvgLinearGradient(vg, x, y, w, h, nvgRGBA(0, 0, 155, 155), nvgRGBA(27, 27, 155, 255));
+        nvgFillPaint(vg, paint);
+        nvgRoundedRect(vg, x, y, w - pad2 - pad2, h - pad2 - pad2, 3.0f);
+        nvgFill(vg);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     SDL_Window *window = NULL;
@@ -1328,44 +1370,15 @@ int main(int argc, char *argv[])
         nvgRect(vg, 0.0f, 0.0f, 800.0f, 600.0f);
         nvgFill(vg);
 
+        Menu::RenderWindow(vg, 30, 30, 270, 40);
 
-        float w = 270.0f;
-        float h = 40.0f;
-     
-        // black outline
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgRoundedRect(vg, 30.0f, 30.0f, w, h, 3.0f);
-        nvgFill(vg);
-    
-        // white inner
-        float pad1 = 1.0f;
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
-        nvgRoundedRect(vg, 30.0f + pad1, 30.0f + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
-        nvgFill(vg);
+        Menu::RenderWindow(vg, 130, 130, 370, 340);
 
-        // black inner
-        pad1 = 3.0f;
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgRoundedRect(vg, 30.0f + pad1, 30.0f + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
-        nvgFill(vg);
+        Menu::RenderWindow(vg, 630, 530, 70, 60);
 
+        Menu::RenderWindow(vg, 300, 300, 250, 100);
 
-        // Gradient window fill
-        float pad2 = 4.0f;
-        nvgResetTransform(vg);
-        nvgTranslate(vg, pad2, pad2);
-        nvgBeginPath(vg);
-        NVGpaint paint = nvgLinearGradient(vg, 30.0f, 30.0f, w, h, nvgRGBA(0, 0, 155, 155), nvgRGBA(27, 27, 155, 255));
-        nvgFillPaint(vg, paint);
-
-     
         // Text
-        nvgRoundedRect(vg, 30.0f, 30.0f, w - pad2 - pad2, h - pad2 - pad2, 3.0f);
-        nvgFill(vg);
-
         nvgResetTransform(vg);
         nvgTranslate(vg, 0.5f, 0.5f);
 
@@ -1380,6 +1393,7 @@ int main(int argc, char *argv[])
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(228, 228, 228, 255));
         nvgText(vg, 40.0f, 55.0f, msg.c_str(), NULL);
+        
 
         if (delay > 2)
         {
