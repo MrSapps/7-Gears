@@ -1,0 +1,9 @@
+[submodule "3rdParty/imgui"]
+	path = 3rdParty/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "3rdParty/nanovg"]
+	path = 3rdParty/nanovg
+	url = https://github.com/memononen/nanovg
+[submodule "3rdParty/solar-cmake"]
+	path = 3rdParty/solar-cmake
+	url = https://github.com/petroules/solar-cmake
