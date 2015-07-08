@@ -843,7 +843,7 @@ int loadDemoData(NVGcontext* vg, DemoData* data)
         printf("Could not add font icons.\n");
         return -1;
     }
-    data->fontNormal = nvgCreateFont(vg, "sans", "../example/Roboto-Regular.ttf");
+    data->fontNormal = nvgCreateFont(vg, "sans", "../example/PTC55F.ttf");
     if (data->fontNormal == -1) {
         printf("Could not add font italic.\n");
         return -1;
@@ -1249,35 +1249,37 @@ namespace Menu
         const float w = static_cast<float>(iw);
         const float h = static_cast<float>(ih);
 
+        float rounding = 6.0f;
+
         // black outline
         nvgResetTransform(vg);
         nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgRoundedRect(vg, x, y, w, h, 3.0f);
+        nvgFillColor(vg, nvgRGBA(123, 123, 123, 255));
+        nvgRoundedRect(vg, x, y, w, h, rounding);
         nvgFill(vg);
 
         // white inner
-        float pad1 = 1.0f;
+        float pad1 = 2.0f;
         nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
-        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
+        nvgFillColor(vg, nvgRGBA(222, 222, 222, 255));
+        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
         nvgFill(vg);
 
         // black inner
-        pad1 = 3.0f;
+        pad1 = 5.0f;
         nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, 3.0f);
+        nvgFillColor(vg, nvgRGBA(74, 74, 74, 255));
+        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
         nvgFill(vg);
 
         // Gradient window fill
-        float pad2 = 4.0f;
+        float pad2 = 7.0f;
         nvgResetTransform(vg);
         nvgTranslate(vg, pad2, pad2);
         nvgBeginPath(vg);
         NVGpaint paint = nvgLinearGradient(vg, x, y, w, h, nvgRGBA(0, 0, 155, 155), nvgRGBA(27, 27, 155, 255));
         nvgFillPaint(vg, paint);
-        nvgRoundedRect(vg, x, y, w - pad2 - pad2, h - pad2 - pad2, 3.0f);
+        nvgRoundedRect(vg, x, y, w - pad2 - pad2, h - pad2 - pad2, rounding);
         nvgFill(vg);
     }
 }
@@ -1335,7 +1337,7 @@ int main(int argc, char *argv[])
     int delay = 0;
     bool up = true;
 
-    const static char kMsg[] = "\"C'mon newcomer.\nFollow me\"";
+    const static char kMsg[] = "Could be the end of the world...";
     unsigned int txtPos = 0;
     std::string msg;
 
@@ -1351,7 +1353,7 @@ int main(int argc, char *argv[])
         nvgFillColor(vg, nvgRGBA(r, 0, 0, 255));
         if (up)
         {
-            r += 2;
+           // r += 2;
             if (r >= 255)
             {
                 up = false;
@@ -1360,7 +1362,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            r -= 2;
+           // r -= 2;
             if (r <= 0)
             {
                 up = true;
@@ -1370,7 +1372,7 @@ int main(int argc, char *argv[])
         nvgRect(vg, 0.0f, 0.0f, 800.0f, 600.0f);
         nvgFill(vg);
 
-        Menu::RenderWindow(vg, 30, 30, 270, 40);
+        Menu::RenderWindow(vg, 30, 30, 470, 60);
 
         Menu::RenderWindow(vg, 130, 130, 370, 340);
 
@@ -1382,17 +1384,19 @@ int main(int argc, char *argv[])
         nvgResetTransform(vg);
         nvgTranslate(vg, 0.5f, 0.5f);
 
+        float ypos = 70.0f;
+        float xpos = 50.0f;
 
-        nvgFontSize(vg, 24.0f);
+        nvgFontSize(vg, 40.0f);
         nvgFontBlur(vg, 0);
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgText(vg, 40.0f, 55.0f, msg.c_str(), NULL);
+        nvgText(vg, xpos, ypos, msg.c_str(), NULL);
 
         nvgResetTransform(vg);
-        nvgFontSize(vg, 24.0f);
+        nvgFontSize(vg, 40.0f);
         nvgFontBlur(vg, 0);
-        nvgFillColor(vg, nvgRGBA(228, 228, 228, 255));
-        nvgText(vg, 40.0f, 55.0f, msg.c_str(), NULL);
+        nvgFillColor(vg, nvgRGBA(230, 230, 230, 255));
+        nvgText(vg, xpos-2.0f, ypos - 2.0f, msg.c_str(), NULL);
         
 
         if (delay > 2)
