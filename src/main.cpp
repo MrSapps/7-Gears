@@ -1277,11 +1277,47 @@ namespace Menu
         nvgResetTransform(vg);
         nvgTranslate(vg, pad2, pad2);
         nvgBeginPath(vg);
-        NVGpaint paint = nvgLinearGradient(vg, x, y, w, h, nvgRGBA(0, 0, 155, 155), nvgRGBA(27, 27, 155, 255));
+        NVGpaint paint = nvgLinearGradient(vg, x, y, w, h, nvgRGBA(0, 0, 155, 255), nvgRGBA(0, 0, 55, 255));
         nvgFillPaint(vg, paint);
         nvgRoundedRect(vg, x, y, w - pad2 - pad2, h - pad2 - pad2, rounding);
         nvgFill(vg);
     }
+}
+
+void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bool disable = false)
+{
+
+    nvgResetTransform(vg);
+    nvgTranslate(vg, 0.5f, 0.5f);
+
+
+    nvgFontSize(vg, 38.0f);
+    nvgFontBlur(vg, 0);
+    nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+    nvgText(vg, xpos, ypos, msg, NULL);
+
+    nvgResetTransform(vg);
+    nvgFontSize(vg, 38.0f);
+    nvgFontBlur(vg, 0);
+    if (!disable)
+    {
+        nvgFillColor(vg, nvgRGBA(230, 230, 230, 255));
+    }
+    else
+    {
+        nvgFillColor(vg, nvgRGBA(94, 94, 94, 255));
+    }
+    nvgText(vg, xpos - 2.0f, ypos - 2.0f, msg, NULL);
+
+    nvgResetTransform(vg);
+    nvgBeginPath(vg);
+    NVGpaint paint = nvgLinearGradient(vg, 100.0f, 100.0f, 100.0f + 15, 120.0f + 15, nvgRGBA(0, 0, 0, 255), nvgRGBA(0, 255, 0, 155));
+    nvgFillPaint(vg, paint);
+
+    nvgFillPaint(vg, paint);
+    nvgCircle(vg, 100.0f, 120.0f, 10.0f);
+    nvgFill(vg);
+
 }
 
 int main(int argc, char *argv[])
@@ -1333,13 +1369,6 @@ int main(int argc, char *argv[])
 
     DemoData data = {};
     
-    int r = 0;
-    int delay = 0;
-    bool up = true;
-
-    const static char kMsg[] = "Could be the end of the world...";
-    unsigned int txtPos = 0;
-    std::string msg;
 
     while (quit == 0)
     {
@@ -1349,74 +1378,23 @@ int main(int argc, char *argv[])
         nvgBeginFrame(vg, 800, 600, pxRatio);
 
         nvgResetTransform(vg);
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(r, 0, 0, 255));
-        if (up)
-        {
-           // r += 2;
-            if (r >= 255)
-            {
-                up = false;
-                r = 255;
-            }
-        }
-        else
-        {
-           // r -= 2;
-            if (r <= 0)
-            {
-                up = true;
-                r = 0;
-            }
-        }
-        nvgRect(vg, 0.0f, 0.0f, 800.0f, 600.0f);
-        nvgFill(vg);
 
-        Menu::RenderWindow(vg, 30, 30, 470, 60);
 
-        Menu::RenderWindow(vg, 130, 130, 370, 340);
+        Menu::RenderWindow(vg, 30, 430.0f, 470.0f, 60);
+        DrawText(vg, 50.0f, 470.0f, "Could be the end of the world...");
 
-        Menu::RenderWindow(vg, 630, 530, 70, 60);
+        Menu::RenderWindow(vg, 100, 250, 800.0f-100-100, 90);
+        DrawText(vg, 120.0f, 250+40.0f,         "Save 1    Save 2    Save 3    Save 4    Save 5");
+        DrawText(vg, 120.0f, 250 + 40.0f+30.0f, "Save 6    Save 7    Save 8    Save 9    Save 10", true);
 
-        Menu::RenderWindow(vg, 300, 300, 250, 100);
 
-        // Text
-        nvgResetTransform(vg);
-        nvgTranslate(vg, 0.5f, 0.5f);
+        Menu::RenderWindow(vg, 0, 0, 800.0f, 60);
+        DrawText(vg, 20.0f, 40.0f, "Checking save data file.");
 
-        float ypos = 70.0f;
-        float xpos = 50.0f;
+        Menu::RenderWindow(vg, 800-200, 0, 200, 60);
+        DrawText(vg, (800 - 200)+20.0f, 40.0f, "Load");
 
-        nvgFontSize(vg, 40.0f);
-        nvgFontBlur(vg, 0);
-        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-        nvgText(vg, xpos, ypos, msg.c_str(), NULL);
 
-        nvgResetTransform(vg);
-        nvgFontSize(vg, 40.0f);
-        nvgFontBlur(vg, 0);
-        nvgFillColor(vg, nvgRGBA(230, 230, 230, 255));
-        nvgText(vg, xpos-2.0f, ypos - 2.0f, msg.c_str(), NULL);
-        
-
-        if (delay > 2)
-        {
-            delay = 0;
-            if (txtPos < _countof(kMsg))
-            {
-                msg += kMsg[txtPos];
-                txtPos++;
-            }
-            else
-            {
-                msg = "";
-                txtPos = 0;
-            }
-        }
-        else
-        {
-            delay++;
-        }
 
         /*
         //renderDemo(vg, 0.0f, 0.0f, 800.0f, 600.0f, 20.0f, 0, &data);
