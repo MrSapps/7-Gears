@@ -1320,9 +1320,18 @@ void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bool disa
 
 }
 
+SDL_Window *window = NULL;
+
+static void OnResize()
+{
+    int width = 0;
+    int height = 0;
+    SDL_GetWindowSize(window, &width, &height);
+    glViewport(0, 0, width, height);
+}
+
 int main(int argc, char *argv[])
 {
-    SDL_Window *window = NULL;
 
     if (sdl_init(&window) != 0)
     {
@@ -1379,6 +1388,16 @@ int main(int argc, char *argv[])
 
         nvgResetTransform(vg);
 
+        //id = Menu::Window(x, y, w, h, alpha, style);
+        
+        // AddRow
+        // AddColumn
+        // SetSize(row, col, wPercent, hPercent);
+        // SetPadding(row, col, lPad, rPad, tPad, bPad);
+        // 
+
+        //Menu::SetLayout(id, layout);
+
 
         Menu::RenderWindow(vg, 30, 430.0f, 470.0f, 60);
         DrawText(vg, 50.0f, 470.0f, "Could be the end of the world...");
@@ -1423,7 +1442,27 @@ int main(int argc, char *argv[])
         {
             switch (e.type)
             {
+            case SDL_WINDOWEVENT:
+                switch (e.window.event)
+                {
+                case SDL_WINDOWEVENT_RESIZED:
+                case SDL_WINDOWEVENT_MAXIMIZED:
+                case SDL_WINDOWEVENT_RESTORED:
+                    OnResize();
+                    break;
+                }
+                break;
+
             case SDL_KEYDOWN:
+                if (e.key.keysym.sym == 13)
+                {
+                    const Uint32 windowFlags = SDL_GetWindowFlags(window);
+                    bool isFullScreen = ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) || (windowFlags & SDL_WINDOW_FULLSCREEN));
+                    SDL_SetWindowFullscreen(window, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+                    OnResize();
+                }
+                break;
+
             case SDL_KEYUP:
                 break;
             case SDL_MOUSEBUTTONDOWN:
