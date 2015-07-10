@@ -32,4 +32,11 @@ private:
     NVGcontext* vg = nullptr;
     struct NVGLUframebuffer *fb = nullptr;
     SDL_Window *window = nullptr;
+
+    enum eStates
+    {
+        eInit,
+        eMenu,
+    };
+    eStates mState = eInit;
 };

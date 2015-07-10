@@ -24,7 +24,6 @@ int loadFonts(NVGcontext* vg)
     return 0;
 }
 
-
 static void OnResize(SDL_Window* window)
 {
     int width = 0;
@@ -94,6 +93,8 @@ int Engine::Run()
         return ret;
     }
 
+    mState = eMenu;
+
     while (!mQuit)
     {
         Update();
@@ -145,6 +146,11 @@ void Engine::Update()
         }
     }
 
+    switch (mState)
+    {
+    case eMenu:
+        mMenu->Update();
+    }
 
 }
 
@@ -152,30 +158,15 @@ void Engine::Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    nvgBeginFrame(vg, 800, 600, 1.0f);
+    switch (mState)
+    {
+    case eMenu:
+        mMenu->Render(vg);
+        break;
+    }
 
-    nvgResetTransform(vg);
-
-
-    Menus::RenderWindow(vg, 30, 430.0f, 470.0f, 60);
-    DrawText(vg, 50.0f, 470.0f, "Could be the end of the world...");
-
-    Menus::RenderWindow(vg, 100, 250, 800.0f - 100 - 100, 90);
-    DrawText(vg, 120.0f, 250 + 40.0f, "Save 1    Save 2    Save 3    Save 4    Save 5");
-    DrawText(vg, 120.0f, 250 + 40.0f + 30.0f, "Save 6    Save 7    Save 8    Save 9    Save 10", true);
-
-
-    Menus::RenderWindow(vg, 0, 0, 800.0f, 60);
-    DrawText(vg, 20.0f, 40.0f, "Checking save data file.");
-
-    Menus::RenderWindow(vg, 800 - 200, 0, 200, 60);
-    DrawText(vg, (800 - 200) + 20.0f, 40.0f, "Load");
-
-    nvgEndFrame(vg);
-    nvgluBindFramebuffer(NULL);
-
+    nvgluBindFramebuffer(nullptr);
     SDL_GL_SwapWindow(window);
-
 }
 
 int Engine::Init()
@@ -229,5 +220,5 @@ void Engine::DeInit()
 
 void Engine::HandleInput()
 {
-
+    mMenu->HandleInput();
 }
