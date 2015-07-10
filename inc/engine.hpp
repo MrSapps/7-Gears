@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <map>
 #include <stdlib.h>
 #include <GL/glew.h>
 
@@ -22,6 +23,13 @@ private:
     void Update();
     void Render();
     int Init();
+    int InitSDL();
+    void AddExistingControllers();
+    void AddController(int id);
+    void RemoveController(int id);
+    std::map<int, SDL_GameController*> mIdtoControllerMap;
+    void OnButton(SDL_GameControllerButton button, bool down);
+
     void DeInit();
 
     void HandleInput();
@@ -31,7 +39,7 @@ private:
     bool mQuit = false;
     NVGcontext* vg = nullptr;
     struct NVGLUframebuffer *fb = nullptr;
-    SDL_Window *window = nullptr;
+    SDL_Window *mSDLWindow = nullptr;
 
     enum eStates
     {

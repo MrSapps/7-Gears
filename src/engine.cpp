@@ -32,42 +32,6 @@ static void OnResize(SDL_Window* window)
     glViewport(0, 0, width, height);
 }
 
-int sdl_init(SDL_Window **w)
-{
-    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS) == 0)
-    {
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-        //SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG ); // May be a performance booster in *nix?
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
-        *w = SDL_CreateWindow("7-Gears", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL);
-        if (*w)
-        {
-            SDL_GL_CreateContext(*w);
-
-            // Activate glew
-            glewExperimental = GL_TRUE;
-            GLenum err = glewInit();
-            if (err == GLEW_OK)
-            {
-                glEnable(GL_STENCIL_TEST);
-
-                return 0;
-            }
-            else
-            {
-                // Send GLEW error as an SDL Error
-                // SDL's error should be clear, since any previous error would stop further initialization
-                SDL_SetError("GLEW Reported an Error: %s", glewGetErrorString(err));
-            }
-        }
-    }
-    if (*w) SDL_DestroyWindow(*w);
-    *w = NULL;
-    return 1;
-}
 
 void sdl_cleanup()
 {
@@ -103,6 +67,42 @@ int Engine::Run()
     return 0;
 }
 
+void Engine::AddExistingControllers()
+{
+    for (int i = 0; i < SDL_NumJoysticks(); ++i)
+    {
+        AddController(i);
+    }
+}
+
+void Engine::AddController(int i)
+{
+    if (SDL_IsGameController(i))
+    {
+        SDL_GameController* controller = SDL_GameControllerOpen(i);
+        if (controller)
+        {
+            SDL_Joystick *joy = SDL_GameControllerGetJoystick(controller);
+            int instanceID = SDL_JoystickInstanceID(joy);
+            mIdtoControllerMap[instanceID] = controller;
+        }
+        else
+        {
+            fprintf(stderr, "Could not open gamecontroller %i: %s\n", i, SDL_GetError());
+        }
+    }
+}
+
+void Engine::RemoveController(int id)
+{
+    auto it = mIdtoControllerMap.find(id);
+    if (it != std::end(mIdtoControllerMap))
+    {
+        SDL_GameController *pad = it->second;
+        SDL_GameControllerClose(pad);
+    }
+}
+
 void Engine::Update()
 {
     SDL_Event e;
@@ -110,29 +110,46 @@ void Engine::Update()
     {
         switch (e.type)
         {
+        case SDL_CONTROLLERDEVICEADDED:
+            AddController(e.cdevice.which);
+            break;
+
+        case SDL_CONTROLLERDEVICEREMOVED:
+            RemoveController(e.cdevice.which);
+            break;
+
+        case SDL_CONTROLLERBUTTONDOWN:
+        case SDL_CONTROLLERBUTTONUP:
+            OnButton(static_cast<SDL_GameControllerButton>(e.cbutton.button), e.type == SDL_CONTROLLERBUTTONDOWN);
+            break;
+
+        case SDL_CONTROLLERAXISMOTION:
+            break;
+
         case SDL_WINDOWEVENT:
             switch (e.window.event)
             {
             case SDL_WINDOWEVENT_RESIZED:
             case SDL_WINDOWEVENT_MAXIMIZED:
             case SDL_WINDOWEVENT_RESTORED:
-                OnResize(window);
+                OnResize(mSDLWindow);
                 break;
             }
             break;
 
         case SDL_KEYDOWN:
-            if (e.key.keysym.sym == 13)
+            if (e.key.keysym.scancode == SDL_SCANCODE_RETURN)
             {
-                const Uint32 windowFlags = SDL_GetWindowFlags(window);
+                const Uint32 windowFlags = SDL_GetWindowFlags(mSDLWindow);
                 bool isFullScreen = ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) || (windowFlags & SDL_WINDOW_FULLSCREEN));
-                SDL_SetWindowFullscreen(window, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
-                OnResize(window);
+                SDL_SetWindowFullscreen(mSDLWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
+                OnResize(mSDLWindow);
             }
             break;
 
         case SDL_KEYUP:
             break;
+
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
             break;
@@ -154,6 +171,72 @@ void Engine::Update()
 
 }
 
+void Engine::OnButton(SDL_GameControllerButton button, bool down)
+{
+    switch (button)
+    {
+    case SDL_CONTROLLER_BUTTON_A:
+        printf("SDL_CONTROLLER_BUTTON_A\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_B:
+        printf("SDL_CONTROLLER_BUTTON_B\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_X:
+        printf("SDL_CONTROLLER_BUTTON_X\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_Y:
+        printf("SDL_CONTROLLER_BUTTON_Y\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_BACK:
+        printf("SDL_CONTROLLER_BUTTON_BACK\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_GUIDE:
+        printf("SDL_CONTROLLER_BUTTON_GUIDE\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_START:
+        printf("SDL_CONTROLLER_BUTTON_START\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_LEFTSTICK:
+        printf("SDL_CONTROLLER_BUTTON_LEFTSTICK\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_RIGHTSTICK:
+        printf("SDL_CONTROLLER_BUTTON_RIGHTSTICK\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:
+        printf("SDL_CONTROLLER_BUTTON_LEFTSHOULDER\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER:
+        printf("SDL_CONTROLLER_BUTTON_RIGHTSHOULDER\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_DPAD_UP:
+        printf("SDL_CONTROLLER_BUTTON_DPAD_UP\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+        printf("SDL_CONTROLLER_BUTTON_DPAD_DOWN\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+        printf("SDL_CONTROLLER_BUTTON_DPAD_LEFT\n");
+        break;
+
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+        printf("SDL_CONTROLLER_BUTTON_DPAD_RIGHT\n");
+        break;
+    };
+}
+
 void Engine::Render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -166,12 +249,12 @@ void Engine::Render()
     }
 
     nvgluBindFramebuffer(nullptr);
-    SDL_GL_SwapWindow(window);
+    SDL_GL_SwapWindow(mSDLWindow);
 }
 
 int Engine::Init()
 {
-    if (sdl_init(&window) != 0)
+    if (InitSDL() != 0)
     {
         // Report SDL's error
         printf("Couldn't init SDL: %s\n", SDL_GetError());
@@ -208,6 +291,42 @@ int Engine::Init()
     printf("Nanovg initialized!\n");
 
     return 0;
+}
+
+int Engine::InitSDL()
+{
+    if (SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER | SDL_INIT_EVENTS) == 0)
+    {
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+        //SDL_GL_SetAttribute( SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG ); // May be a performance booster in *nix?
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+        mSDLWindow = SDL_CreateWindow("7-Gears", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL);
+        if (mSDLWindow)
+        {
+            SDL_GL_CreateContext(mSDLWindow);
+
+            // Activate glew
+            glewExperimental = GL_TRUE;
+            GLenum err = glewInit();
+            if (err == GLEW_OK)
+            {
+                glEnable(GL_STENCIL_TEST);
+
+                return 0;
+            }
+            else
+            {
+                // Send GLEW error as an SDL Error
+                // SDL's error should be clear, since any previous error would stop further initialization
+                SDL_SetError("GLEW Reported an Error: %s", glewGetErrorString(err));
+            }
+        }
+    }
+ 
+    return 1;
 }
 
 void Engine::DeInit()
