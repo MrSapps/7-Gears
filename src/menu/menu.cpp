@@ -53,14 +53,15 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
     nvgResetTransform(vg);
    // nvgTranslate(vg, 0.5f, 0.5f);
 
+    float fontSize = 36.0f * 2;
 
-    nvgFontSize(vg, 36.0f);
+    nvgFontSize(vg, fontSize);
     nvgFontBlur(vg, 0);
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-    nvgText(vg, xpos, ypos+33.0f, msg, nullptr);
+    nvgText(vg, xpos, ypos + fontSize, msg, nullptr);
 
     nvgResetTransform(vg);
-    nvgFontSize(vg, 36.0f);
+    nvgFontSize(vg, fontSize);
     nvgFontBlur(vg, 0);
     if (!disable)
     {
@@ -70,7 +71,7 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
     {
         nvgFillColor(vg, nvgRGBA(94, 94, 94, 255));
     }
-    nvgText(vg, xpos - 2.0f, ypos - 2.0f + 33.0f, msg, nullptr);
+    nvgText(vg, xpos - 2.0f, ypos - 2.0f + fontSize, msg, nullptr);
 
     /*
     nvgResetTransform(vg);
@@ -286,8 +287,8 @@ private:
 
 void Menu::Render(NVGcontext* vg)
 {
-    float screenW = 800.0f;
-    float screenH = 600.0f;
+    float screenW = 1600.0f;
+    float screenH = 1200.0f;
 
     nvgBeginFrame(vg, screenW, screenH, 1.0f);
 
