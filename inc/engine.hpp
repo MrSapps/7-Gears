@@ -51,4 +51,5 @@ private:
     std::map<SDL_Scancode, SDL_GameControllerButton> mKeyBoardToControllerMap;
 
     bool mButtonsArray[SDL_CONTROLLER_BUTTON_MAX] = { };
+    bool mOldButtonsArray[SDL_CONTROLLER_BUTTON_MAX] = {};
 };

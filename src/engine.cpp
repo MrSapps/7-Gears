@@ -197,6 +197,8 @@ void Engine::Update()
         mMenu->Update();
     }
 
+    memcpy(mOldButtonsArray,mButtonsArray, sizeof(mOldButtonsArray));
+
 }
 
 void Engine::OnButton(SDL_GameControllerButton button, bool down)
@@ -264,6 +266,7 @@ void Engine::OnButton(SDL_GameControllerButton button, bool down)
         break;
     };
 
+    mOldButtonsArray[button] = mButtonsArray[button];
     mButtonsArray[button] = down;
 }
 
@@ -370,5 +373,5 @@ void Engine::DeInit()
 
 void Engine::HandleInput()
 {
-    mMenu->HandleInput(mButtonsArray);
+    mMenu->HandleInput(mButtonsArray, mOldButtonsArray);
 }

@@ -100,7 +100,7 @@ void Menu::Render(NVGcontext* vg)
     DrawText(vg, 120.0f, 250 + 40.0f + 30.0f, "Save 6    Save 7    Save 8    Save 9    Save 10", true);
 
 
-    Menus::RenderWindow(vg, 0, 0, 800.0f, 60);
+    Menus::RenderWindow(vg, 0, 0, 800.0f-200.0f, 60);
     DrawText(vg, 20.0f, 40.0f, "Checking save data file.");
 
     Menus::RenderWindow(vg, 800 - 200, 0, 200, 60);
@@ -123,26 +123,26 @@ void Menu::Update()
 
 }
 
-void Menu::HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX])
+void Menu::HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX], const bool(&oldbuttons)[SDL_CONTROLLER_BUTTON_MAX])
 {
-    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT])
+    if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT])
     {
-        mCursorXPos--;
+        mCursorXPos-=40.0f;
     }
 
-    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
+    if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
     {
-        mCursorXPos++;
+        mCursorXPos += 40.0f;
     }
 
-    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_UP])
+    if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_UP] && buttons[SDL_CONTROLLER_BUTTON_DPAD_UP])
     {
-        mCursorYPos--;
+        mCursorYPos -= 40.0f;
     }
     
-    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN])
+    if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] && buttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN])
     {
-        mCursorYPos++;
+        mCursorYPos += 40.0f;
     }
 
 }
