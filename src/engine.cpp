@@ -189,6 +189,8 @@ void Engine::Update()
         }
     }
 
+    HandleInput();
+
     switch (mState)
     {
     case eMenu:
@@ -262,7 +264,7 @@ void Engine::OnButton(SDL_GameControllerButton button, bool down)
         break;
     };
 
-    HandleInput(button, down);
+    mButtonsArray[button] = down;
 }
 
 void Engine::Render()
@@ -366,7 +368,7 @@ void Engine::DeInit()
     sdl_cleanup();
 }
 
-void Engine::HandleInput(SDL_GameControllerButton button, bool down)
+void Engine::HandleInput()
 {
-    mMenu->HandleInput(button, down);
+    mMenu->HandleInput(mButtonsArray);
 }

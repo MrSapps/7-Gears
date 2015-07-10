@@ -32,7 +32,7 @@ private:
 
     void DeInit();
 
-    void HandleInput(SDL_GameControllerButton button, bool down);
+    void HandleInput();
 
     std::unique_ptr<Kernel> mKernel;
     std::unique_ptr<Menu> mMenu;
@@ -49,4 +49,6 @@ private:
     eStates mState = eInit;
 
     std::map<SDL_Scancode, SDL_GameControllerButton> mKeyBoardToControllerMap;
+
+    bool mButtonsArray[SDL_CONTROLLER_BUTTON_MAX] = { };
 };

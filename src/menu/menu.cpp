@@ -106,6 +106,13 @@ void Menu::Render(NVGcontext* vg)
     Menus::RenderWindow(vg, 800 - 200, 0, 200, 60);
     DrawText(vg, (800 - 200) + 20.0f, 40.0f, "Load");
 
+    // Temp cursor
+    nvgResetTransform(vg);
+    nvgBeginPath(vg);
+    nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+    nvgRect(vg, mCursorXPos, mCursorYPos, 25, 25);
+    nvgFill(vg);
+
 
     nvgEndFrame(vg);
 
@@ -116,7 +123,26 @@ void Menu::Update()
 
 }
 
-void Menu::HandleInput(SDL_GameControllerButton button, bool down)
+void Menu::HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX])
 {
+    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT])
+    {
+        mCursorXPos--;
+    }
+
+    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
+    {
+        mCursorXPos++;
+    }
+
+    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_UP])
+    {
+        mCursorYPos--;
+    }
+    
+    if (buttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN])
+    {
+        mCursorYPos++;
+    }
 
 }
