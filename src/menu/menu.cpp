@@ -116,7 +116,7 @@ void Menu::Update()
 
 }
 
-void Menu::HandleInput()
+void Menu::HandleInput(SDL_GameControllerButton button, bool down)
 {
 
 }

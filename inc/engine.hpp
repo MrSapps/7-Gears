@@ -32,7 +32,7 @@ private:
 
     void DeInit();
 
-    void HandleInput();
+    void HandleInput(SDL_GameControllerButton button, bool down);
 
     std::unique_ptr<Kernel> mKernel;
     std::unique_ptr<Menu> mMenu;
@@ -47,4 +47,6 @@ private:
         eMenu,
     };
     eStates mState = eInit;
+
+    std::map<SDL_Scancode, SDL_GameControllerButton> mKeyBoardToControllerMap;
 };

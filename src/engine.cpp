@@ -42,6 +42,25 @@ Engine::Engine()
 {
     mKernel = std::make_unique<Kernel>();
     mMenu = std::make_unique<Menu>();
+
+    // TODO: Come up with a sane mapping
+    mKeyBoardToControllerMap[SDL_SCANCODE_SPACE] = SDL_CONTROLLER_BUTTON_B;
+    mKeyBoardToControllerMap[SDL_SCANCODE_UP] = SDL_CONTROLLER_BUTTON_DPAD_UP;
+    mKeyBoardToControllerMap[SDL_SCANCODE_DOWN] = SDL_CONTROLLER_BUTTON_DPAD_DOWN;
+    mKeyBoardToControllerMap[SDL_SCANCODE_LEFT] = SDL_CONTROLLER_BUTTON_DPAD_LEFT;
+    mKeyBoardToControllerMap[SDL_SCANCODE_RIGHT] = SDL_CONTROLLER_BUTTON_DPAD_RIGHT;
+    mKeyBoardToControllerMap[SDL_SCANCODE_A] = SDL_CONTROLLER_BUTTON_A;
+    mKeyBoardToControllerMap[SDL_SCANCODE_X] = SDL_CONTROLLER_BUTTON_X;
+    mKeyBoardToControllerMap[SDL_SCANCODE_Y] = SDL_CONTROLLER_BUTTON_Y;
+    mKeyBoardToControllerMap[SDL_SCANCODE_BACKSPACE] = SDL_CONTROLLER_BUTTON_BACK;
+    mKeyBoardToControllerMap[SDL_SCANCODE_HOME] = SDL_CONTROLLER_BUTTON_GUIDE;
+    /*
+    mKeyBoardToControllerMap[SDL_SCANCODE_SPACE] = SDL_CONTROLLER_BUTTON_START;
+    mKeyBoardToControllerMap[SDL_SCANCODE_SPACE] = SDL_CONTROLLER_BUTTON_LEFTSTICK;
+    mKeyBoardToControllerMap[SDL_SCANCODE_SPACE] = SDL_CONTROLLER_BUTTON_RIGHTSTICK;
+    mKeyBoardToControllerMap[SDL_SCANCODE_SPACE] = SDL_CONTROLLER_BUTTON_LEFTSHOULDER;
+    mKeyBoardToControllerMap[SDL_SCANCODE_SPACE] = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER;
+    */
 }
 
 Engine::~Engine()
@@ -137,17 +156,24 @@ void Engine::Update()
             }
             break;
 
+        case SDL_KEYUP:
         case SDL_KEYDOWN:
-            if (e.key.keysym.scancode == SDL_SCANCODE_RETURN)
+        {
+            if (e.key.keysym.scancode == SDL_SCANCODE_RETURN && e.type == SDL_KEYDOWN)
             {
                 const Uint32 windowFlags = SDL_GetWindowFlags(mSDLWindow);
                 bool isFullScreen = ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) || (windowFlags & SDL_WINDOW_FULLSCREEN));
                 SDL_SetWindowFullscreen(mSDLWindow, isFullScreen ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
                 OnResize(mSDLWindow);
             }
-            break;
 
-        case SDL_KEYUP:
+            // We map keyboard keys onto the SDL controller keys, then game logic just handles game pad keys
+            auto it = mKeyBoardToControllerMap.find(e.key.keysym.scancode);
+            if (it != std::end(mKeyBoardToControllerMap))
+            {
+                OnButton(it->second, e.type == SDL_KEYDOWN);
+            }
+        }
             break;
 
         case SDL_MOUSEBUTTONDOWN:
@@ -235,6 +261,8 @@ void Engine::OnButton(SDL_GameControllerButton button, bool down)
         printf("SDL_CONTROLLER_BUTTON_DPAD_RIGHT\n");
         break;
     };
+
+    HandleInput(button, down);
 }
 
 void Engine::Render()
@@ -314,6 +342,7 @@ int Engine::InitSDL()
             if (err == GLEW_OK)
             {
                 glEnable(GL_STENCIL_TEST);
+                SDL_ShowCursor(0);
 
                 return 0;
             }
@@ -337,7 +366,7 @@ void Engine::DeInit()
     sdl_cleanup();
 }
 
-void Engine::HandleInput()
+void Engine::HandleInput(SDL_GameControllerButton button, bool down)
 {
-    mMenu->HandleInput();
+    mMenu->HandleInput(button, down);
 }
