@@ -56,7 +56,7 @@ add_definitions(-DGLEW_STATIC)
 
 
 include_directories(
-    include
+    inc
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/nanovg/src
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glew-1.11.0/include
@@ -86,6 +86,22 @@ SET_PROPERTY(TARGET glew PROPERTY FOLDER "3rdparty")
 
 
 add_executable(7-Gears MACOSX_BUNDLE
+    inc/kernel/texfile.hpp
+    src/kernel/texfile.cpp
+    src/kernel/lgp.cpp
+    inc/kernel/lgp.hpp
+    src/kernel/filesystem.cpp
+    inc/kernel/filesystem.hpp
+    src/kernel/stream.cpp
+    inc/kernel/stream.hpp
+    src/kernel/kernel.cpp
+    inc/kernel/kernel.hpp
+    src/menu/menu.cpp
+    inc/menu/menu.hpp
+    inc/exceptions.hpp
+    inc/logger.hpp
+    inc/engine.hpp
+    src/engine.cpp
     src/main.cpp
 )
 
