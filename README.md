@@ -8,3 +8,5 @@ Current idea/plan is as follows:
 4. Using SDL2 for Window/Input management, bgfx for rendering and NanoVG for the Menu module. ImGui for debug UI.
 5. Use native formats with a thin abstraction layer.
 6. Build in mod support/file swapping at the file system abstraction layer
+
+![Alt text](https://github.com/paulsapps/7-Gears/blob/master/media/mockup.png "")
