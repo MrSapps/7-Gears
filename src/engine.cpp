@@ -336,7 +336,7 @@ int Engine::InitSDL()
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-        mSDLWindow = SDL_CreateWindow("7-Gears", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL);
+        mSDLWindow = SDL_CreateWindow("7-Gears", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1024, 768, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
         if (mSDLWindow)
         {
             SDL_GL_CreateContext(mSDLWindow);
