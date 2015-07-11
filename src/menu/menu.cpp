@@ -114,7 +114,18 @@ public:
 
     }
 
-    virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) = 0;
+    virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
+    {
+        float xpos = Percent(screen.w, widget.x);
+        float ypos = Percent(screen.h, widget.y);
+        float w = Percent(screen.w, widget.w);
+        float h = Percent(screen.h, widget.h);
+
+        nvgBeginPath(vg);
+        nvgStrokeColor(vg, nvgRGBA(255, 0, 255, 255));
+        nvgRect(vg, xpos + screen.x, ypos + screen.y, w, h);
+        nvgStroke(vg);
+    }
 private:
 
 };
@@ -141,6 +152,7 @@ public:
             float ypos = Percent(screen.h, widget.y);
             DrawText(vg, xpos+ screen.x + 15, ypos + screen.y, mText.c_str());
         }
+        Widget::Render(vg, screen, widget);
     }
 
     void SetText(const std::string& text)
@@ -151,6 +163,7 @@ public:
 private:
     std::string mText;
 };
+
 
 class Container : public Widget
 {
@@ -166,6 +179,7 @@ public:
         {
             mWidget->Render(vg, screen, widget);
         }
+        Widget::Render(vg, screen, widget);
     }
 
     void SetWidget(std::unique_ptr<Widget> w)
@@ -191,7 +205,15 @@ public:
         float ypos = Percent(screen.h, widget.y);
         float width = Percent(screen.w, widget.w);
         float height = Percent(screen.h, widget.h);
+        Widget::Render(vg, screen, widget);
         Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
+
+        // TODO: Make screen rect smaller by the window border amount
+        float hackWindowBorderAmount = 0.0f;
+        screen.x += hackWindowBorderAmount;
+        screen.y += hackWindowBorderAmount;
+       // screen.w = screen.w - 19.0f;
+       // screen.h -= hackWindowBorderAmount*2;
         Container::Render(vg, screen, widget);
     }
 
@@ -270,7 +292,7 @@ public:
         tableRect.w = Percent(screen.w, widget.w);
         tableRect.h = Percent(screen.h, widget.h);
 
-
+        
         float yPercent = 0.0f;
         for (size_t y = 0; y < mCells.size(); y++)
         {
