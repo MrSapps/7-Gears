@@ -45,15 +45,16 @@ namespace Menus
         nvgFillPaint(vg, paint);
         nvgRoundedRect(vg, x, y, w - pad2 - pad2, h - pad2 - pad2, rounding);
         nvgFill(vg);
+
+        nvgResetTransform(vg);
     }
 }
 
 static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bool disable = false)
 {
 
-    nvgResetTransform(vg);
-   // nvgTranslate(vg, 0.5f, 0.5f);
-
+   // nvgResetTransform(vg);
+   
     float fontSize = 36.0f;
 
     nvgFontSize(vg, fontSize);
@@ -73,17 +74,6 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
         nvgFillColor(vg, nvgRGBA(94, 94, 94, 255));
     }
     nvgText(vg, xpos - 2.0f, ypos - 2.0f + fontSize, msg, nullptr);
-
-    /*
-    nvgResetTransform(vg);
-    nvgBeginPath(vg);
-    NVGpaint paint = nvgLinearGradient(vg, 100.0f, 100.0f, 100.0f + 15, 120.0f + 15, nvgRGBA(0, 0, 0, 255), nvgRGBA(0, 255, 0, 155));
-    nvgFillPaint(vg, paint);
-
-    nvgFillPaint(vg, paint);
-    nvgCircle(vg, 100.0f, 120.0f, 10.0f);
-    nvgFill(vg);
-    */
 }
 
 Menu::Menu()
@@ -95,6 +85,8 @@ static float Percent(float max, float percent)
 {
     return (max / 100.0f) * percent;
 }
+
+
 
 struct WindowRect
 {
@@ -116,18 +108,21 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
     {
+   
         float xpos = Percent(screen.w, widget.x);
         float ypos = Percent(screen.h, widget.y);
         float w = Percent(screen.w, widget.w);
         float h = Percent(screen.h, widget.h);
 
         nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGBA(255, 0, 255, 255));
+        nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
         nvgRect(vg, xpos + screen.x, ypos + screen.y, w, h);
         nvgStroke(vg);
     }
-private:
-
+protected:
+    unsigned char mR = 250;
+    unsigned char mG = 0;
+    unsigned char mB = 255;
 };
 
 class Label : public Widget
@@ -135,7 +130,9 @@ class Label : public Widget
 public:
     Label()
     {
-
+        mR = 255;
+        mG = 255;
+        mB = 0;
     }
 
     Label(const std::string& text)
@@ -178,8 +175,8 @@ public:
         if (mWidget)
         {
             mWidget->Render(vg, screen, widget);
+            Widget::Render(vg, screen, widget);
         }
-        Widget::Render(vg, screen, widget);
     }
 
     void SetWidget(std::unique_ptr<Widget> w)
@@ -190,6 +187,11 @@ public:
 private:
     std::unique_ptr<Widget> mWidget;
 };
+
+static float ToPercent(float current, float max)
+{
+    return (current / max) * 100.0f;
+}
 
 class Window : public Container
 {
@@ -205,15 +207,23 @@ public:
         float ypos = Percent(screen.h, widget.y);
         float width = Percent(screen.w, widget.w);
         float height = Percent(screen.h, widget.h);
+        mR = 0;
+        mG = 255;
+        mB = 0;
         Widget::Render(vg, screen, widget);
         Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
 
-        // TODO: Make screen rect smaller by the window border amount
-        float hackWindowBorderAmount = 0.0f;
-        screen.x += hackWindowBorderAmount;
-        screen.y += hackWindowBorderAmount;
-       // screen.w = screen.w - 19.0f;
-       // screen.h -= hackWindowBorderAmount*2;
+        // Add N pixels for padding to child, but convert back to %
+        float hackWindowBorderAmount = 6.0f;
+        widget.x = ToPercent(xpos + hackWindowBorderAmount, screen.w);
+        widget.y = ToPercent(ypos + hackWindowBorderAmount, screen.h);
+        widget.w = ToPercent(width - (hackWindowBorderAmount * 2), screen.w);
+        widget.h = ToPercent(height - (hackWindowBorderAmount * 2), screen.h);
+
+
+        mR = 255;
+        mG = 0;
+        mB = 0;
         Container::Render(vg, screen, widget);
     }
 
@@ -224,7 +234,9 @@ class Cell : public Container
 public:
     Cell()
     {
-
+        mR = 0;
+        mG = 0;
+        mB = 255;
     }
 
     void SetWidthHeightPercent(float wpercent, float hpercent)
@@ -321,13 +333,22 @@ void Menu::Render(NVGcontext* vg)
     float screenW = 800.0f;
     float screenH = 600.0f;
 
-    WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
-
+    WindowRect screen = { 50.0f, 50.0f, screenW-100.0f, screenH-100.0f };
     nvgBeginFrame(vg, screenW, screenH, 1.0f);
+
+
+    nvgResetTransform(vg);
+    
+    // Screen rect
+    nvgBeginPath(vg);
+    nvgFillColor(vg, nvgRGBA(128, 128, 0, 255));
+    nvgRect(vg, screen.x, screen.y, screen.w, screen.h);
+    nvgFill(vg);
 
     nvgResetTransform(vg);
 
 
+    
     TableLayout l(1, 1);
     l.GetCell(0, 0).SetWidthHeightPercent(100, 100);
     auto txt1 = std::make_unique<Window>();
@@ -346,10 +367,9 @@ void Menu::Render(NVGcontext* vg)
     txt3->SetWidget(std::make_unique<Label>("Load"));
     layout2.GetCell(1, 0).SetWidget(std::move(txt3));
     layout2.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 100.0f, 10.8f });
-
-
     
 
+    
     auto layout = std::make_unique<TableLayout>(5, 2);
     int saveNum = 0;
     for (int x = 0; x < 5; x++)
@@ -359,13 +379,18 @@ void Menu::Render(NVGcontext* vg)
             layout->GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
         }
     }
+
     Window saves;
     saves.SetWidget(std::move(layout));
     saves.Render(vg, screen, WindowRect{ 14.0f, 42.0f, 100.0f - (14.0f * 2), 14.0f });
+    
 
+    
     Window test;
     test.SetWidget(std::make_unique<Label>("Testing direct window"));
-    test.Render(vg, screen, WindowRect{ 40.0f, 80.0f, 40.0f, 9.0f });
+    test.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 8.0f, 8.0f });
+    
+
 
     // Temp cursor
     nvgResetTransform(vg);
