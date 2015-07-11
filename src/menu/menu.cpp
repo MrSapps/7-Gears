@@ -108,7 +108,7 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
     {
-   
+
         float xpos = Percent(screen.w, widget.x);
         float ypos = Percent(screen.h, widget.y);
         float w = Percent(screen.w, widget.w);
@@ -299,8 +299,8 @@ public:
         
         // Calc the screen rect for the whole table
         WindowRect tableRect;
-        tableRect.x = Percent(screen.w, widget.x);
-        tableRect.y = Percent(screen.h, widget.y);
+        tableRect.x = Percent(screen.w, widget.x) + screen.x;
+        tableRect.y = Percent(screen.h, widget.y) + screen.y;
         tableRect.w = Percent(screen.w, widget.w);
         tableRect.h = Percent(screen.h, widget.h);
 
@@ -334,6 +334,8 @@ void Menu::Render(NVGcontext* vg)
     float screenH = 600.0f;
 
     WindowRect screen = { 50.0f, 50.0f, screenW-100.0f, screenH-100.0f };
+   // WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
+
     nvgBeginFrame(vg, screenW, screenH, 1.0f);
 
 
@@ -354,7 +356,7 @@ void Menu::Render(NVGcontext* vg)
     auto txt1 = std::make_unique<Window>();
     txt1->SetWidget(std::make_unique<Label>("Could be the end of the world..."));
     l.GetCell(0, 0).SetWidget(std::move(txt1));
-    l.Render(vg, screen, WindowRect{ 2, 70, 55, 8 });
+    l.Render(vg, screen, WindowRect{ 1, 70, 65, 10 });
 
     TableLayout layout2(2, 1);
     layout2.GetCell(0, 0).SetWidthHeightPercent(75, 100);
@@ -388,7 +390,7 @@ void Menu::Render(NVGcontext* vg)
     
     Window test;
     test.SetWidget(std::make_unique<Label>("Testing direct window"));
-    test.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 8.0f, 8.0f });
+    test.Render(vg, screen, WindowRect{ 2.0f, 85.0f, 50.0f, 10.0f });
     
 
 
