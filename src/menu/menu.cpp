@@ -57,6 +57,11 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
    
     float fontSize = 36.0f;
 
+    nvgTextAlign(vg, NVG_ALIGN_TOP);
+    float bounds[4];
+    nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
+
+
     nvgFontSize(vg, fontSize);
     nvgFontBlur(vg, 0);
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
@@ -108,7 +113,6 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
     {
-
         float xpos = Percent(screen.w, widget.x);
         float ypos = Percent(screen.h, widget.y);
         float w = Percent(screen.w, widget.w);
@@ -118,6 +122,7 @@ public:
         nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
         nvgRect(vg, xpos + screen.x, ypos + screen.y, w, h);
         nvgStroke(vg);
+        
     }
 protected:
     unsigned char mR = 250;
@@ -213,6 +218,7 @@ public:
         Widget::Render(vg, screen, widget);
         Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
 
+        // TODO: Caculate as a pixel amount via percentage of the overall window width
         // Add N pixels for padding to child, but convert back to %
         float hackWindowBorderAmount = 6.0f;
         widget.x = ToPercent(xpos + hackWindowBorderAmount, screen.w);
@@ -349,15 +355,6 @@ void Menu::Render(NVGcontext* vg)
 
     nvgResetTransform(vg);
 
-
-    
-    TableLayout l(1, 1);
-    l.GetCell(0, 0).SetWidthHeightPercent(100, 100);
-    auto txt1 = std::make_unique<Window>();
-    txt1->SetWidget(std::make_unique<Label>("Could be the end of the world..."));
-    l.GetCell(0, 0).SetWidget(std::move(txt1));
-    l.Render(vg, screen, WindowRect{ 1, 70, 65, 10 });
-
     TableLayout layout2(2, 1);
     layout2.GetCell(0, 0).SetWidthHeightPercent(75, 100);
 
@@ -371,28 +368,8 @@ void Menu::Render(NVGcontext* vg)
     layout2.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 100.0f, 10.8f });
     
 
-    
-    auto layout = std::make_unique<TableLayout>(5, 2);
-    int saveNum = 0;
-    for (int x = 0; x < 5; x++)
-    {
-        for (int y = 0; y < 2; y++)
-        {
-            layout->GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
-        }
-    }
-
-    Window saves;
-    saves.SetWidget(std::move(layout));
-    saves.Render(vg, screen, WindowRect{ 14.0f, 42.0f, 100.0f - (14.0f * 2), 14.0f });
-    
-
-    
-    Window test;
-    test.SetWidget(std::make_unique<Label>("Testing direct window"));
-    test.Render(vg, screen, WindowRect{ 2.0f, 85.0f, 50.0f, 10.0f });
-
     // Nested table test
+
     {
         auto layout = std::make_unique<TableLayout>(2, 2);
         int saveNum = 0;
@@ -421,8 +398,40 @@ void Menu::Render(NVGcontext* vg)
 
         Window win;
         win.SetWidget(std::move(layout));
-        win.Render(vg, screen, WindowRect{ 10.0f, 10.0f, 100.0f-20.0f, 100.0f-20.0f });
+        win.Render(vg, screen, WindowRect{ 15.0f, 15.0f, 100.0f - 30.0f, 100.0f - 30.0f });
     }
+
+
+
+    TableLayout l(1, 1);
+    l.GetCell(0, 0).SetWidthHeightPercent(100, 100);
+    auto txt1 = std::make_unique<Window>();
+    txt1->SetWidget(std::make_unique<Label>("Could be the end of the world..."));
+    l.GetCell(0, 0).SetWidget(std::move(txt1));
+    l.Render(vg, screen, WindowRect{ 1, 78, 65, 10 });
+
+    auto layout = std::make_unique<TableLayout>(5, 2);
+    int saveNum = 0;
+    for (int x = 0; x < 5; x++)
+    {
+        for (int y = 0; y < 2; y++)
+        {
+            layout->GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
+        }
+    }
+
+    Window saves;
+    saves.SetWidget(std::move(layout));
+    saves.Render(vg, screen, WindowRect{ 24.0f, 62.0f, 100.0f - (14.0f * 2), 14.0f });
+    
+
+    
+    Window test;
+    test.SetWidget(std::make_unique<Label>("Testing direct window"));
+    test.Render(vg, screen, WindowRect{ 2.0f, 90.0f, 50.0f, 10.0f });
+
+
+    
 
     Window nestedWin;
     auto subWin = std::make_unique<Window>();

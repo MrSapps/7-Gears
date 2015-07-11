@@ -18,6 +18,6 @@ private:
     };
     eStates mState = eNone;
 
-    float mCursorXPos = 150.0f;
+    float mCursorXPos = 100.0f;
     float mCursorYPos = 150.0f;
 };
