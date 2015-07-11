@@ -60,7 +60,7 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
     nvgFontSize(vg, fontSize);
     nvgFontBlur(vg, 0);
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-    nvgText(vg, xpos, ypos + fontSize, msg, nullptr);
+    nvgText(vg, xpos, ypos, msg, nullptr);
 
     nvgResetTransform(vg);
     nvgFontSize(vg, fontSize);
@@ -73,7 +73,7 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
     {
         nvgFillColor(vg, nvgRGBA(94, 94, 94, 255));
     }
-    nvgText(vg, xpos - 2.0f, ypos - 2.0f + fontSize, msg, nullptr);
+    nvgText(vg, xpos - 2.0f, ypos - 2.0f, msg, nullptr);
 }
 
 Menu::Menu()
@@ -147,7 +147,7 @@ public:
         {
             float xpos = Percent(screen.w, widget.x);
             float ypos = Percent(screen.h, widget.y);
-            DrawText(vg, xpos+ screen.x + 15, ypos + screen.y, mText.c_str());
+            DrawText(vg, xpos+screen.x, ypos + screen.y, mText.c_str());
         }
         Widget::Render(vg, screen, widget);
     }
