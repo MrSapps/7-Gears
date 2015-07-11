@@ -391,8 +391,44 @@ void Menu::Render(NVGcontext* vg)
     Window test;
     test.SetWidget(std::make_unique<Label>("Testing direct window"));
     test.Render(vg, screen, WindowRect{ 2.0f, 85.0f, 50.0f, 10.0f });
-    
 
+    // Nested table test
+    {
+        auto layout = std::make_unique<TableLayout>(2, 2);
+        int saveNum = 0;
+        for (int x = 0; x < 2; x++)
+        {
+            for (int y = 0; y < 2; y++)
+            {
+                if (x != 1 && y != 1)
+                {
+                    auto layout2 = std::make_unique<TableLayout>(2, 2);
+                    for (int x2 = 0; x2 < 2; x2++)
+                    {
+                        for (int y2 = 0; y2 < 2; y2++)
+                        {
+                            layout2->GetCell(x2, y2).SetWidget(std::make_unique<Label>("T:" + std::to_string(++saveNum) + " " + std::to_string(x2 + 1) + "," + std::to_string(y2 + 1)));
+                        }
+                    }
+                    layout->GetCell(x, y).SetWidget(std::move(layout2));
+                }
+                else
+                {
+                    layout->GetCell(x, y).SetWidget(std::make_unique<Label>("Other"));
+                }
+            }
+        }
+
+        Window win;
+        win.SetWidget(std::move(layout));
+        win.Render(vg, screen, WindowRect{ 10.0f, 10.0f, 100.0f-20.0f, 100.0f-20.0f });
+    }
+
+    Window nestedWin;
+    auto subWin = std::make_unique<Window>();
+    subWin->SetWidget(std::make_unique<Window>());
+    nestedWin.SetWidget(std::move(subWin));
+    nestedWin.Render(vg, screen, WindowRect{ 90.0f, 90.0f, 10.0f, 10.0f });
 
     // Temp cursor
     nvgResetTransform(vg);
