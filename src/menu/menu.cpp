@@ -50,22 +50,62 @@ namespace Menus
     }
 }
 
-static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bool disable = false)
+static void DrawText(NVGcontext* vg, float xpos, float ypos, float w, float h, const char* msg, bool centreH, bool centreV, bool disable = false)
 {
 
    // nvgResetTransform(vg);
    
-    float fontSize = 36.0f;
+    float fontSize = 25.0f;
 
+
+    // Set up font attributes
     nvgTextAlign(vg, NVG_ALIGN_TOP);
-    float bounds[4];
-    nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
-
-
     nvgFontSize(vg, fontSize);
     nvgFontBlur(vg, 0);
+
+    // Calc the rect the font will use
+    float bounds[4];
+    nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
+    nvgResetTransform(vg);
+    nvgBeginPath(vg);
+    nvgStrokeColor(vg, nvgRGBA(222, 222, 222, 255));
+
+    float fontX = bounds[0];
+    float fontY = bounds[1];
+    float fontW = bounds[2] - bounds[0];
+    float fontH = bounds[3] - bounds[1];
+
+    // Move to the right if the font will appear outside of the left edge of the rect
+    if (fontX < xpos)
+    {
+        xpos += xpos - fontX;
+    }
+
+    // Center the text rect vertically
+    if (centreV)
+    {
+        ypos += (h / 2) - (fontH / 2);
+    }
+
+    if (centreH)
+    {
+        xpos += (w / 2) - (fontW / 2);
+    }
+
+    // After fixing up get the rect again and debug draw it
+    nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
+   // nvgRect(vg,
+   //     bounds[0],
+   //     bounds[1],
+   //     fontW,
+   //     fontH);
+
+    nvgStroke(vg);
+    //  nvgResetTransform(vg);
+
     nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-    nvgText(vg, xpos, ypos, msg, nullptr);
+
+    nvgText(vg, xpos + 2.0f, ypos + 2.0f, msg, nullptr);
 
     nvgResetTransform(vg);
     nvgFontSize(vg, fontSize);
@@ -78,7 +118,7 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
     {
         nvgFillColor(vg, nvgRGBA(94, 94, 94, 255));
     }
-    nvgText(vg, xpos - 2.0f, ypos - 2.0f, msg, nullptr);
+    nvgText(vg, xpos, ypos, msg, nullptr);
 }
 
 Menu::Menu()
@@ -113,6 +153,7 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
     {
+        /*
         float xpos = Percent(screen.w, widget.x);
         float ypos = Percent(screen.h, widget.y);
         float w = Percent(screen.w, widget.w);
@@ -122,7 +163,7 @@ public:
         nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
         nvgRect(vg, xpos + screen.x, ypos + screen.y, w, h);
         nvgStroke(vg);
-        
+        */
     }
 protected:
     unsigned char mR = 250;
@@ -152,7 +193,9 @@ public:
         {
             float xpos = Percent(screen.w, widget.x);
             float ypos = Percent(screen.h, widget.y);
-            DrawText(vg, xpos+screen.x, ypos + screen.y, mText.c_str());
+            float width = Percent(screen.w, widget.w);
+            float height = Percent(screen.h, widget.h);
+            DrawText(vg, xpos+screen.x, ypos + screen.y, width, height, mText.c_str(), false, true);
         }
         Widget::Render(vg, screen, widget);
     }
@@ -218,7 +261,7 @@ public:
         Widget::Render(vg, screen, widget);
         Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
 
-        // TODO: Caculate as a pixel amount via percentage of the overall window width
+        // TODO: Calculate as a pixel amount via percentage of the overall window width
         // Add N pixels for padding to child, but convert back to %
         float hackWindowBorderAmount = 6.0f;
         widget.x = ToPercent(xpos + hackWindowBorderAmount, screen.w);
@@ -340,7 +383,7 @@ void Menu::Render(NVGcontext* vg)
     float screenH = 600.0f;
 
     WindowRect screen = { 50.0f, 50.0f, screenW-100.0f, screenH-100.0f };
-   // WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
+    //WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
 
     nvgBeginFrame(vg, screenW, screenH, 1.0f);
 
