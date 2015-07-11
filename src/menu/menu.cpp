@@ -2,6 +2,7 @@
 #include <deque>
 #include <memory>
 #include <iostream>
+#include <string>
 
 namespace Menus
 {
@@ -53,7 +54,7 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, const char* msg, bo
     nvgResetTransform(vg);
    // nvgTranslate(vg, 0.5f, 0.5f);
 
-    float fontSize = 36.0f * 2;
+    float fontSize = 36.0f;
 
     nvgFontSize(vg, fontSize);
     nvgFontBlur(vg, 0);
@@ -90,6 +91,16 @@ Menu::Menu()
 
 }
 
+static float Percent(float max, float percent)
+{
+    return (max / 100.0f) * percent;
+}
+
+struct WindowRect
+{
+    float x, y, w, h;
+};
+
 class Widget
 {
 public:
@@ -103,7 +114,7 @@ public:
 
     }
 
-    virtual void Render(NVGcontext* vg, float xpos, float ypos, float width, float height) = 0;
+    virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) = 0;
 private:
 
 };
@@ -122,11 +133,13 @@ public:
 
     }
 
-    virtual void Render(NVGcontext* vg, float xpos, float ypos, float width, float height) override
+    virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
         if (!mText.empty())
         {
-            DrawText(vg, xpos+15, ypos, mText.c_str());
+            float xpos = Percent(screen.w, widget.x);
+            float ypos = Percent(screen.h, widget.y);
+            DrawText(vg, xpos+ screen.x + 15, ypos + screen.y, mText.c_str());
         }
     }
 
@@ -153,22 +166,22 @@ public:
 
     }
 
-    virtual void Render(NVGcontext* vg, float xpos, float ypos, float width, float height) override
+    virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
-         Menus::RenderWindow(vg, xpos, ypos, width, height);
+         float xpos = Percent(screen.w, widget.x);
+         float ypos = Percent(screen.h, widget.y);
+         float width = Percent(screen.w, widget.w);
+         float height = Percent(screen.h, widget.h);
+
+         Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
          if (!mText.empty())
          {
-             DrawText(vg, xpos + 15, ypos, mText.c_str());
+             DrawText(vg, xpos + screen.x + 15, ypos + screen.y, mText.c_str());
          }
     }
 private:
     std::string mText;
 };
-
-static float Percent(float max, float percent)
-{
-    return (max / 100.0f) * percent;
-}
 
 class Cell
 {
@@ -184,15 +197,11 @@ public:
         mHeightPercent = hpercent;
     }
 
-    void Render(NVGcontext* vg, float xPercentPos, float yPercentPos, float containerWidth, float containerHeight, float parentX, float parentY)
+    void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
     {
         if (mWidget)
         {
-            const float xpos = Percent(containerWidth, xPercentPos) + parentX;
-            const float ypos = Percent(containerHeight, yPercentPos) + parentY;
-            const float w = Percent(containerWidth,mWidthPercent);
-            const float h = Percent(containerHeight,mHeightPercent);
-            mWidget->Render(vg, xpos, ypos, w, h);
+            mWidget->Render(vg,screen, widget);
         }
     }
 
@@ -217,24 +226,19 @@ private:
     float mHeightPercent = 1.0f;
 };
 
-class TableLayout
+class TableLayout : public Widget
 {
 public:
-    TableLayout(float screenW, float screenH, float x, float y, float w, float h, int cols, int rows)
-        : mXPos(x), mYPos(y), mWidth(w), mHeight(h)
+    TableLayout(int cols, int rows)
     {
-        mXPos = Percent(screenW, mXPos);
-        mYPos = Percent(screenH, mYPos);
-        mWidth = Percent(screenW, mWidth);
-        mHeight = Percent(screenH, mHeight);
-
-        // Default to 1x1 table
+        // Set up the table/grid
         mCells.resize(rows);
         for (int i = 0; i < rows; i++)
         {
             mCells[i].resize(cols);
         }
 
+        // Make each cell take equal size
         for (int x = 0; x < cols; x++)
         {
             for (int y = 0; y < rows; y++)
@@ -249,13 +253,17 @@ public:
         return mCells[y][x];
     }
 
-    void Render(NVGcontext* vg)
+    void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
     {
         nvgResetTransform(vg);
-        if (mWidget)
-        {
-            mWidget->Render(vg, mXPos, mYPos, mWidth, mHeight);
-        }
+        
+        // Calc the screen rect for the whole table
+        WindowRect tableRect;
+        tableRect.x = Percent(screen.w, widget.x);
+        tableRect.y = Percent(screen.h, widget.y);
+        tableRect.w = Percent(screen.w, widget.w);
+        tableRect.h = Percent(screen.h, widget.h);
+
 
         float yPercent = 0.0f;
         for (size_t y = 0; y < mCells.size(); y++)
@@ -263,7 +271,7 @@ public:
             float xPercent = 0.0f;
             for (size_t x = 0; x < mCells[y].size(); x++)
             {
-                mCells[y][x].Render(vg, xPercent, yPercent, mWidth, mHeight, mXPos, mYPos);
+                mCells[y][x].Render(vg, tableRect, WindowRect{ xPercent, yPercent, mCells[y][x].WidthPercent(), mCells[y][x].HeightPercent() });
                 xPercent += mCells[y][x].WidthPercent();
                 
             }
@@ -271,13 +279,7 @@ public:
         }
     }
 
-    void SetWidget(std::unique_ptr<Widget> w)
-    {
-        mWidget = std::move(w);
-    }
-
 private:
-    std::unique_ptr<Widget> mWidget;
     std::deque<std::deque<Cell>> mCells;
     float mXPos;
     float mYPos;
@@ -287,37 +289,43 @@ private:
 
 void Menu::Render(NVGcontext* vg)
 {
-    float screenW = 1600.0f;
-    float screenH = 1200.0f;
+    float screenW = 800.0f;
+    float screenH = 600.0f;
+
+    WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
 
     nvgBeginFrame(vg, screenW, screenH, 1.0f);
 
     nvgResetTransform(vg);
 
 
-    TableLayout l(screenW, screenH, 2, 70, 55, 8, 1, 1);
+    TableLayout l(1, 1);
     l.GetCell(0, 0).SetWidthHeightPercent(100, 100);
     l.GetCell(0, 0).SetWidget(std::make_unique<Window>("Could be the end of the world..."));
-    l.Render(vg);
+    l.Render(vg, screen, WindowRect{ 2, 70, 55, 8 });
 
-    TableLayout layout2(screenW, screenH, 0.0f, 0.0f, 100.0f, 10.8f, 2, 1);
+    TableLayout layout2(2, 1);
     layout2.GetCell(0, 0).SetWidthHeightPercent(75, 100);
     layout2.GetCell(0, 0).SetWidget(std::make_unique<Window>("Checking save data file."));
     layout2.GetCell(1, 0).SetWidthHeightPercent(25, 100);
     layout2.GetCell(1, 0).SetWidget(std::make_unique<Window>("Load"));
-    layout2.Render(vg);
+    layout2.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 100.0f, 10.8f });
 
-    TableLayout layout(screenW, screenH, 14.0f, 42.0f, 100.0f-(14.0f*2), 14.0f, 5, 2);
-    layout.SetWidget(std::make_unique<Window>());
+    TableLayout layout(5, 2);
+//    layout.SetWidget(std::make_unique<Window>());
+    int saveNum = 0;
     for (int x = 0; x < 5; x++)
     {
         for (int y = 0; y < 2; y++)
         {
-            layout.GetCell(x, y).SetWidget(std::make_unique<Label>("Test"));
+            layout.GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
         }
     }
-    layout.Render(vg);
+    layout.Render(vg, screen, WindowRect{ 14.0f, 42.0f, 100.0f - (14.0f * 2), 14.0f });
     
+    Window test("Testing");
+    test.Render(vg, screen, WindowRect{ 40.0f, 80.0f, 30.0f, 9.0f });
+
     // Temp cursor
     nvgResetTransform(vg);
     nvgBeginPath(vg);
