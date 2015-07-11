@@ -152,7 +152,32 @@ private:
     std::string mText;
 };
 
-class Window : public Widget
+class Container : public Widget
+{
+public:
+    Container()
+    {
+
+    }
+
+    virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
+    {
+        if (mWidget)
+        {
+            mWidget->Render(vg, screen, widget);
+        }
+    }
+
+    void SetWidget(std::unique_ptr<Widget> w)
+    {
+        mWidget = std::move(w);
+    }
+
+private:
+    std::unique_ptr<Widget> mWidget;
+};
+
+class Window : public Container
 {
 public:
     Window()
@@ -160,30 +185,19 @@ public:
 
     }
 
-    Window(const std::string& text)
-        : mText(text)
-    {
-
-    }
-
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
-         float xpos = Percent(screen.w, widget.x);
-         float ypos = Percent(screen.h, widget.y);
-         float width = Percent(screen.w, widget.w);
-         float height = Percent(screen.h, widget.h);
-
-         Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
-         if (!mText.empty())
-         {
-             DrawText(vg, xpos + screen.x + 15, ypos + screen.y, mText.c_str());
-         }
+        float xpos = Percent(screen.w, widget.x);
+        float ypos = Percent(screen.h, widget.y);
+        float width = Percent(screen.w, widget.w);
+        float height = Percent(screen.h, widget.h);
+        Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
+        Container::Render(vg, screen, widget);
     }
-private:
-    std::string mText;
+
 };
 
-class Cell
+class Cell : public Container
 {
 public:
     Cell()
@@ -197,12 +211,9 @@ public:
         mHeightPercent = hpercent;
     }
 
-    void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
+    void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
-        if (mWidget)
-        {
-            mWidget->Render(vg,screen, widget);
-        }
+        Container::Render(vg, screen, widget);
     }
 
     float WidthPercent() const
@@ -215,18 +226,12 @@ public:
         return mHeightPercent;
     }
 
-    void SetWidget(std::unique_ptr<Widget> w)
-    {
-        mWidget = std::move(w);
-    }
-
 private:
-    std::unique_ptr<Widget> mWidget;
     float mWidthPercent = 1.0f;
     float mHeightPercent = 1.0f;
 };
 
-class TableLayout : public Widget
+class TableLayout : public Container
 {
 public:
     TableLayout(int cols, int rows)
@@ -253,8 +258,9 @@ public:
         return mCells[y][x];
     }
 
-    void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
+    void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
+
         nvgResetTransform(vg);
         
         // Calc the screen rect for the whole table
@@ -276,7 +282,8 @@ public:
                 
             }
             yPercent += mCells[y][0].HeightPercent();
-        }
+        }  
+        Container::Render(vg, screen, widget);
     }
 
 private:
@@ -301,30 +308,42 @@ void Menu::Render(NVGcontext* vg)
 
     TableLayout l(1, 1);
     l.GetCell(0, 0).SetWidthHeightPercent(100, 100);
-    l.GetCell(0, 0).SetWidget(std::make_unique<Window>("Could be the end of the world..."));
+    auto txt1 = std::make_unique<Window>();
+    txt1->SetWidget(std::make_unique<Label>("Could be the end of the world..."));
+    l.GetCell(0, 0).SetWidget(std::move(txt1));
     l.Render(vg, screen, WindowRect{ 2, 70, 55, 8 });
 
     TableLayout layout2(2, 1);
     layout2.GetCell(0, 0).SetWidthHeightPercent(75, 100);
-    layout2.GetCell(0, 0).SetWidget(std::make_unique<Window>("Checking save data file."));
+
+    auto txt2 = std::make_unique<Window>();
+    txt2->SetWidget(std::make_unique<Label>("Checking save data file."));
+    layout2.GetCell(0, 0).SetWidget(std::move(txt2));
     layout2.GetCell(1, 0).SetWidthHeightPercent(25, 100);
-    layout2.GetCell(1, 0).SetWidget(std::make_unique<Window>("Load"));
+    auto txt3 = std::make_unique<Window>();
+    txt3->SetWidget(std::make_unique<Label>("Load"));
+    layout2.GetCell(1, 0).SetWidget(std::move(txt3));
     layout2.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 100.0f, 10.8f });
 
-    TableLayout layout(5, 2);
-//    layout.SetWidget(std::make_unique<Window>());
+
+    
+
+    auto layout = std::make_unique<TableLayout>(5, 2);
     int saveNum = 0;
     for (int x = 0; x < 5; x++)
     {
         for (int y = 0; y < 2; y++)
         {
-            layout.GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
+            layout->GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
         }
     }
-    layout.Render(vg, screen, WindowRect{ 14.0f, 42.0f, 100.0f - (14.0f * 2), 14.0f });
-    
-    Window test("Testing");
-    test.Render(vg, screen, WindowRect{ 40.0f, 80.0f, 30.0f, 9.0f });
+    Window saves;
+    saves.SetWidget(std::move(layout));
+    saves.Render(vg, screen, WindowRect{ 14.0f, 42.0f, 100.0f - (14.0f * 2), 14.0f });
+
+    Window test;
+    test.SetWidget(std::make_unique<Label>("Testing direct window"));
+    test.Render(vg, screen, WindowRect{ 40.0f, 80.0f, 40.0f, 9.0f });
 
     // Temp cursor
     nvgResetTransform(vg);
