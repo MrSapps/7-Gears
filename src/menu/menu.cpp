@@ -361,7 +361,8 @@ private:
 class TableLayout : public Container
 {
 public:
-    TableLayout(int cols, int rows)
+    TableLayout(int cols, int rows, int cursorId)
+        : mCursorId(cursorId)
     {
         // Set up the table/grid
         mCells.resize(rows);
@@ -385,6 +386,25 @@ public:
         return mCells[y][x];
     }
 
+    void GetCellXYPercentPos(int col, int row, float& x, float& y)
+    {
+        for (size_t i = 0; i < row; i++)
+        {
+             x += mCells[col][i].WidthPercent();
+
+        }
+        
+        for (size_t i = 0; i < col; i++)
+        {
+            y += mCells[i][row].HeightPercent();
+        }
+
+     //   mCells[y][x].Render(vg, tableRect, WindowRect{ x, y, mCells[row][col].WidthPercent(), mCells[row][col].HeightPercent() });
+
+
+    }
+
+
     void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
 
@@ -405,6 +425,12 @@ public:
             for (size_t x = 0; x < mCells[y].size(); x++)
             {
                 mCells[y][x].Render(vg, tableRect, WindowRect{ xPercent, yPercent, mCells[y][x].WidthPercent(), mCells[y][x].HeightPercent() });
+                if (mCursorId && y == mRow && x == mCol)
+                {
+                    Image img(mCursorId);
+                    img.Render(vg, tableRect, WindowRect{ xPercent, yPercent, 8.25f, 8.83f * 4 });
+                }
+                
                 xPercent += mCells[y][x].WidthPercent();
                 
             }
@@ -423,14 +449,63 @@ public:
         return static_cast<int>(mCells[0].size());
     }
 
+    void HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX], const bool(&oldbuttons)[SDL_CONTROLLER_BUTTON_MAX])
+    {
+        // Right
+        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
+        {
+            mCol++;
+            if (mCol >= Cols())
+            {
+                mCol = 0;
+            }
+        }
+
+        // Left
+        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT])
+        {
+            mCol--;
+            if (mCol < 0)
+            {
+                mCol = Cols()-1;
+            }
+        }
+
+        // Up
+
+        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_UP] && buttons[SDL_CONTROLLER_BUTTON_DPAD_UP])
+        {
+            mRow--;
+            if (mRow < 0)
+            {
+                mRow = Rows() - 1;
+            }
+        }
+
+        // Down
+        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] && buttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN])
+        {
+            mRow++;
+            if (mRow >= Rows())
+            {
+                mRow = 0;
+            }
+        }
+
+
+    }
 
 private:
     std::deque<std::deque<Cell>> mCells;
+    int mCursorId;
     float mXPos;
     float mYPos;
     float mWidth;
     float mHeight;
+    int mRow = 0;
+    int mCol = 0;
 };
+
 
 class SelectionGrid : public Window
 {
@@ -438,7 +513,7 @@ public:
     SelectionGrid(int cursorId, int cols, int rows)
         : mCursorId(cursorId)
     {
-        auto ptr = std::make_unique<TableLayout>(cols, rows);
+        auto ptr = std::make_unique<TableLayout>(cols, rows, cursorId);
         mTable = ptr.get();
         SetWidget(std::move(ptr));
     }
@@ -446,25 +521,6 @@ public:
     void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
         Window::Render(vg, screen, widget);
-
-        // TODO: Position cursor correctly
-        float yPercent = 0.0f;
-        float xPercent = 0.0f;
-
-        for (size_t x = 0; x < mCol; x++)
-        {
-            xPercent += mTable->GetCell(x, mRow).WidthPercent();
-        }
-
-        for (size_t y = 0; y < mRow; y++)
-        {
-            yPercent += mTable->GetCell(0, y).HeightPercent();
-        }
-
-
-        Image img(mCursorId);
-        img.Render(vg, screen, WindowRect{ widget.x + xPercent, yPercent, 8.25f / 2, 8.83f / 2 });
-
     }
 
     Cell& GetCell(int x, int y)
@@ -474,34 +530,12 @@ public:
 
     void HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX], const bool(&oldbuttons)[SDL_CONTROLLER_BUTTON_MAX])
     {
-        // Right
-        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
-        {
-            mCol++;
-            if (mCol >= mTable->Cols())
-            {
-                mCol = 0;
-            }
-        }
-
-        // Down
-        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] && buttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN])
-        {
-            mRow++;
-            if (mRow >= mTable->Rows())
-            {
-                mRow = 0;
-            }
-        }
-
-        // TODO: Handle other input
+        mTable->HandleInput(buttons, oldbuttons);
     }
-
 private:
     TableLayout* mTable;
     int mCursorId;
-    int mRow = 0;
-    int mCol = 0;
+
 };
 
 void Menu::Render(NVGcontext* vg)
@@ -526,7 +560,7 @@ void Menu::Render(NVGcontext* vg)
 
     nvgResetTransform(vg);
 
-    TableLayout layout2(2, 1);
+    TableLayout layout2(2, 1, 0);
     layout2.GetCell(0, 0).SetWidthHeightPercent(75, 100);
 
     auto txt2 = std::make_unique<Window>();
@@ -542,7 +576,7 @@ void Menu::Render(NVGcontext* vg)
     // Nested table test
 
     {
-        auto layout = std::make_unique<TableLayout>(2, 2);
+        auto layout = std::make_unique<TableLayout>(2, 2, 0);
         int saveNum = 0;
         for (int x = 0; x < 2; x++)
         {
@@ -550,7 +584,7 @@ void Menu::Render(NVGcontext* vg)
             {
                 if (x != 1 && y != 1)
                 {
-                    auto layout2 = std::make_unique<TableLayout>(2, 2);
+                    auto layout2 = std::make_unique<TableLayout>(2, 2, 0);
                     for (int x2 = 0; x2 < 2; x2++)
                     {
                         for (int y2 = 0; y2 < 2; y2++)
@@ -574,7 +608,7 @@ void Menu::Render(NVGcontext* vg)
 
 
 
-    TableLayout l(1, 1);
+    TableLayout l(1, 1, 0);
     l.GetCell(0, 0).SetWidthHeightPercent(100, 100);
     auto txt1 = std::make_unique<Window>();
     txt1->SetWidget(std::make_unique<Label>("Could be the end of the world..."));
@@ -593,7 +627,7 @@ void Menu::Render(NVGcontext* vg)
     {
         mSaves = std::make_unique<SelectionGrid>(id, 5, 2);
 
-        auto layout = std::make_unique<TableLayout>(5, 2);
+        auto layout = std::make_unique<TableLayout>(5, 2, 0);
         int saveNum = 0;
 
         for (int y = 0; y < 2; y++)
