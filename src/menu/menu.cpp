@@ -6,7 +6,7 @@
 
 static float gScreenW = 800.0f;
 static float gScreenH = 600.0f;
-static bool gDebugDraw = true;
+static bool gDebugDraw = false;
 
 Menu::Menu()
 {
@@ -428,7 +428,20 @@ public:
                 if (mCursorId && y == mRow && x == mCol)
                 {
                     Image img(mCursorId);
-                    img.Render(vg, tableRect, WindowRect{ xPercent, yPercent, 8.25f, 8.83f * 4 });
+
+                    float cursorW = Percent(tableRect.w, 8.25f);
+                    cursorW = cursorW - cursorW / 6;
+
+                    float cellYBottom = Percent(tableRect.h, mCells[y][x].HeightPercent());
+
+                    // Get the point in the middle of the cell vertically
+                    cellYBottom = cellYBottom / 3;
+
+                    // Convert back to a percentage
+                    float adjustByHalfPercent = ToPercent(cellYBottom, tableRect.h);
+
+                    WindowRect tableRectAdjustedToTheLeft = { tableRect.x - cursorW, tableRect.y, tableRect.w, tableRect.h };
+                    img.Render(vg, tableRectAdjustedToTheLeft, WindowRect{ xPercent, yPercent + adjustByHalfPercent, 8.25f, 8.83f * 4 });
                 }
                 
                 xPercent += mCells[y][x].WidthPercent();
