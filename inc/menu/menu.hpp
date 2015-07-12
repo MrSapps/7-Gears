@@ -1,13 +1,14 @@
 #pragma once
 
 #include "nanovg.h"
+#include <memory>
 #include <SDL.h>
 
 class Menu
 {
 public:
     Menu();
-
+    ~Menu();
     void Render(NVGcontext* vg);
     void Update();
     void HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX], const bool(&oldbuttons)[SDL_CONTROLLER_BUTTON_MAX]);
@@ -18,6 +19,6 @@ private:
     };
     eStates mState = eNone;
 
-    float mCursorXPos = 100.0f;
-    float mCursorYPos = 150.0f;
+    std::unique_ptr<class SelectionGrid> mSaves;
+
 };

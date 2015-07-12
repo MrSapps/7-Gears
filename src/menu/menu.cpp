@@ -4,6 +4,9 @@
 #include <iostream>
 #include <string>
 
+float screenW = 800.0f;
+float screenH = 600.0f;
+
 namespace Menus
 {
     static void RenderWindow(NVGcontext* vg, int ix, int iy, int iw, int ih)
@@ -55,7 +58,7 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, float w, float h, c
 
    // nvgResetTransform(vg);
    
-    float fontSize = 25.0f;
+    float fontSize = 35.0f;
 
 
     // Set up font attributes
@@ -91,6 +94,11 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, float w, float h, c
     {
         xpos += (w / 2) - (fontW / 2);
     }
+    else
+    {
+        // Pad off the left edge a little
+        xpos += 12.0f;
+    }
 
     // After fixing up get the rect again and debug draw it
     nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
@@ -122,6 +130,11 @@ static void DrawText(NVGcontext* vg, float xpos, float ypos, float w, float h, c
 }
 
 Menu::Menu()
+{
+
+}
+
+Menu::~Menu()
 {
 
 }
@@ -170,6 +183,37 @@ protected:
     unsigned char mG = 0;
     unsigned char mB = 255;
 };
+
+class Image : public Widget
+{
+public:
+    Image(int id)
+        : mImageId(id)
+    {
+
+    }
+
+
+    virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
+    {
+        float xpos = Percent(screen.w, widget.x);
+        float ypos = Percent(screen.h, widget.y);
+        float w = Percent(screen.w, widget.w);
+        float h = Percent(screen.h, widget.h);
+
+        nvgBeginPath(vg);
+        NVGpaint imgPaint = nvgImagePattern(vg, xpos + screen.x, ypos + screen.y, w,h, 0.0f, mImageId, 1.0f);
+        nvgFillPaint(vg, imgPaint);
+        nvgRect(vg, xpos + screen.x, ypos + screen.y, w, h);
+        nvgFill(vg);
+
+        Widget::Render(vg, screen, widget);
+    }
+
+private:
+    int mImageId;
+};
+
 
 class Label : public Widget
 {
@@ -232,7 +276,7 @@ public:
         mWidget = std::move(w);
     }
 
-private:
+protected:
     std::unique_ptr<Widget> mWidget;
 };
 
@@ -369,6 +413,17 @@ public:
         Container::Render(vg, screen, widget);
     }
 
+    int Rows() const
+    {
+        return static_cast<int>(mCells.size());
+    }
+
+    int Cols() const
+    {
+        return static_cast<int>(mCells[0].size());
+    }
+
+
 private:
     std::deque<std::deque<Cell>> mCells;
     float mXPos;
@@ -377,24 +432,97 @@ private:
     float mHeight;
 };
 
+class SelectionGrid : public Window
+{
+public:
+    SelectionGrid(int cursorId, int cols, int rows)
+        : mCursorId(cursorId)
+    {
+        auto ptr = std::make_unique<TableLayout>(cols, rows);
+        mTable = ptr.get();
+        SetWidget(std::move(ptr));
+    }
+
+    void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
+    {
+        Window::Render(vg, screen, widget);
+
+        // TODO: Position cursor correctly
+        float yPercent = 0.0f;
+        float xPercent = 0.0f;
+
+        for (size_t x = 0; x < mCol; x++)
+        {
+            xPercent += mTable->GetCell(x, mRow).WidthPercent();
+        }
+
+        for (size_t y = 0; y < mRow; y++)
+        {
+            yPercent += mTable->GetCell(0, y).HeightPercent();
+        }
+
+
+        Image img(mCursorId);
+        img.Render(vg, screen, WindowRect{ widget.x + xPercent, yPercent, 8.25f / 2, 8.83f / 2 });
+
+    }
+
+    Cell& GetCell(int x, int y)
+    {
+        return static_cast<TableLayout*>(mWidget.get())->GetCell(x, y);
+    }
+
+    void HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX], const bool(&oldbuttons)[SDL_CONTROLLER_BUTTON_MAX])
+    {
+        // Right
+        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
+        {
+            mCol++;
+            if (mCol >= mTable->Cols())
+            {
+                mCol = 0;
+            }
+        }
+
+        // Down
+        if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] && buttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN])
+        {
+            mRow++;
+            if (mRow >= mTable->Rows())
+            {
+                mRow = 0;
+            }
+        }
+
+        // TODO: Handle other input
+    }
+
+private:
+    TableLayout* mTable;
+    int mCursorId;
+    int mRow = 0;
+    int mCol = 0;
+};
+
 void Menu::Render(NVGcontext* vg)
 {
-    float screenW = 800.0f;
-    float screenH = 600.0f;
 
-    WindowRect screen = { 50.0f, 50.0f, screenW-100.0f, screenH-100.0f };
-    //WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
+    WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
 
     nvgBeginFrame(vg, screenW, screenH, 1.0f);
 
 
     nvgResetTransform(vg);
     
+    
     // Screen rect
+    /*
     nvgBeginPath(vg);
     nvgFillColor(vg, nvgRGBA(128, 128, 0, 255));
     nvgRect(vg, screen.x, screen.y, screen.w, screen.h);
     nvgFill(vg);
+    */
+
 
     nvgResetTransform(vg);
 
@@ -408,7 +536,7 @@ void Menu::Render(NVGcontext* vg)
     auto txt3 = std::make_unique<Window>();
     txt3->SetWidget(std::make_unique<Label>("Load"));
     layout2.GetCell(1, 0).SetWidget(std::move(txt3));
-    layout2.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 100.0f, 10.8f });
+    layout2.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 100.0f, 9.0f });
     
 
     // Nested table test
@@ -451,21 +579,32 @@ void Menu::Render(NVGcontext* vg)
     auto txt1 = std::make_unique<Window>();
     txt1->SetWidget(std::make_unique<Label>("Could be the end of the world..."));
     l.GetCell(0, 0).SetWidget(std::move(txt1));
-    l.Render(vg, screen, WindowRect{ 1, 78, 65, 10 });
+    l.Render(vg, screen, WindowRect{ 1, 78, 55, 10 });
 
-    auto layout = std::make_unique<TableLayout>(5, 2);
-    int saveNum = 0;
-    for (int x = 0; x < 5; x++)
+
+    // Temp cursor
+    static int id = nvgCreateImage(vg, "hand.png", 0);
+    if (id == 0)
     {
-        for (int y = 0; y < 2; y++)
-        {
-            layout->GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
-        }
+        // load failure
     }
 
-    Window saves;
-    saves.SetWidget(std::move(layout));
-    saves.Render(vg, screen, WindowRect{ 24.0f, 62.0f, 100.0f - (14.0f * 2), 14.0f });
+    if (!mSaves)
+    {
+        mSaves = std::make_unique<SelectionGrid>(id, 5, 2);
+
+        auto layout = std::make_unique<TableLayout>(5, 2);
+        int saveNum = 0;
+
+        for (int y = 0; y < 2; y++)
+        {
+            for (int x = 0; x < 5; x++)
+            {
+                mSaves->GetCell(x, y).SetWidget(std::make_unique<Label>("Save " + std::to_string(++saveNum)));
+            }
+        }
+    }
+    mSaves->Render(vg, screen, WindowRect{ 13.0f, 62.0f, 100.0f - (13.0f * 2), 14.0f });
     
 
     
@@ -482,12 +621,10 @@ void Menu::Render(NVGcontext* vg)
     nestedWin.SetWidget(std::move(subWin));
     nestedWin.Render(vg, screen, WindowRect{ 90.0f, 90.0f, 10.0f, 10.0f });
 
-    // Temp cursor
-    nvgResetTransform(vg);
-    nvgBeginPath(vg);
-    nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
-    nvgRect(vg, mCursorXPos, mCursorYPos, 25, 25);
-    nvgFill(vg);
+
+
+   
+   // nvgDeleteImage(vg, id);
 
     nvgEndFrame(vg);
 }
@@ -499,24 +636,29 @@ void Menu::Update()
 
 void Menu::HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX], const bool(&oldbuttons)[SDL_CONTROLLER_BUTTON_MAX])
 {
+    if (mSaves)
+    {
+        mSaves->HandleInput(buttons, oldbuttons);
+    }
+
     if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT])
     {
-        mCursorXPos -= 40.0f;
+       // mCursorXPos -= 40.0f;
     }
 
     if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
     {
-        mCursorXPos += 40.0f;
+       // mCursorXPos += 40.0f;
     }
 
     if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_UP] && buttons[SDL_CONTROLLER_BUTTON_DPAD_UP])
     {
-        mCursorYPos -= 40.0f;
+        //mCursorYPos -= 40.0f;
     }
     
     if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN] && buttons[SDL_CONTROLLER_BUTTON_DPAD_DOWN])
     {
-        mCursorYPos += 40.0f;
+       // mCursorYPos += 40.0f;
     }
 
 }
