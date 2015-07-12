@@ -4,130 +4,9 @@
 #include <iostream>
 #include <string>
 
-float screenW = 800.0f;
-float screenH = 600.0f;
-
-namespace Menus
-{
-    static void RenderWindow(NVGcontext* vg, int ix, int iy, int iw, int ih)
-    {
-        const float x = static_cast<float>(ix);
-        const float y = static_cast<float>(iy);
-        const float w = static_cast<float>(iw);
-        const float h = static_cast<float>(ih);
-
-        float rounding = 6.0f;
-
-        // black outline
-        nvgResetTransform(vg);
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(123, 123, 123, 255));
-        nvgRoundedRect(vg, x, y, w, h, rounding);
-        nvgFill(vg);
-
-        // white inner
-        float pad1 = 2.0f;
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(222, 222, 222, 255));
-        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
-        nvgFill(vg);
-
-        // black inner
-        pad1 = 5.0f;
-        nvgBeginPath(vg);
-        nvgFillColor(vg, nvgRGBA(74, 74, 74, 255));
-        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
-        nvgFill(vg);
-
-        // Gradient window fill
-        float pad2 = 7.0f;
-        nvgResetTransform(vg);
-        nvgTranslate(vg, pad2, pad2);
-        nvgBeginPath(vg);
-        NVGpaint paint = nvgLinearGradient(vg, x, y, w, h, nvgRGBA(0, 0, 155, 255), nvgRGBA(0, 0, 55, 255));
-        nvgFillPaint(vg, paint);
-        nvgRoundedRect(vg, x, y, w - pad2 - pad2, h - pad2 - pad2, rounding);
-        nvgFill(vg);
-
-        nvgResetTransform(vg);
-    }
-}
-
-static void DrawText(NVGcontext* vg, float xpos, float ypos, float w, float h, const char* msg, bool centreH, bool centreV, bool disable = false)
-{
-
-   // nvgResetTransform(vg);
-   
-    float fontSize = 35.0f;
-
-
-    // Set up font attributes
-    nvgTextAlign(vg, NVG_ALIGN_TOP);
-    nvgFontSize(vg, fontSize);
-    nvgFontBlur(vg, 0);
-
-    // Calc the rect the font will use
-    float bounds[4];
-    nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
-    nvgResetTransform(vg);
-    nvgBeginPath(vg);
-    nvgStrokeColor(vg, nvgRGBA(222, 222, 222, 255));
-
-    float fontX = bounds[0];
-    float fontY = bounds[1];
-    float fontW = bounds[2] - bounds[0];
-    float fontH = bounds[3] - bounds[1];
-
-    // Move to the right if the font will appear outside of the left edge of the rect
-    if (fontX < xpos)
-    {
-        xpos += xpos - fontX;
-    }
-
-    // Center the text rect vertically
-    if (centreV)
-    {
-        ypos += (h / 2) - (fontH / 2);
-    }
-
-    if (centreH)
-    {
-        xpos += (w / 2) - (fontW / 2);
-    }
-    else
-    {
-        // Pad off the left edge a little
-        xpos += 12.0f;
-    }
-
-    // After fixing up get the rect again and debug draw it
-    nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
-   // nvgRect(vg,
-   //     bounds[0],
-   //     bounds[1],
-   //     fontW,
-   //     fontH);
-
-    nvgStroke(vg);
-    //  nvgResetTransform(vg);
-
-    nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-
-    nvgText(vg, xpos + 2.0f, ypos + 2.0f, msg, nullptr);
-
-    nvgResetTransform(vg);
-    nvgFontSize(vg, fontSize);
-    nvgFontBlur(vg, 0);
-    if (!disable)
-    {
-        nvgFillColor(vg, nvgRGBA(230, 230, 230, 255));
-    }
-    else
-    {
-        nvgFillColor(vg, nvgRGBA(94, 94, 94, 255));
-    }
-    nvgText(vg, xpos, ypos, msg, nullptr);
-}
+static float gScreenW = 800.0f;
+static float gScreenH = 600.0f;
+static bool gDebugDraw = true;
 
 Menu::Menu()
 {
@@ -143,8 +22,6 @@ static float Percent(float max, float percent)
 {
     return (max / 100.0f) * percent;
 }
-
-
 
 struct WindowRect
 {
@@ -166,17 +43,18 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget)
     {
-        /*
-        float xpos = Percent(screen.w, widget.x);
-        float ypos = Percent(screen.h, widget.y);
-        float w = Percent(screen.w, widget.w);
-        float h = Percent(screen.h, widget.h);
+        if (gDebugDraw)
+        {
+            float xpos = Percent(screen.w, widget.x);
+            float ypos = Percent(screen.h, widget.y);
+            float w = Percent(screen.w, widget.w);
+            float h = Percent(screen.h, widget.h);
 
-        nvgBeginPath(vg);
-        nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
-        nvgRect(vg, xpos + screen.x, ypos + screen.y, w, h);
-        nvgStroke(vg);
-        */
+            nvgBeginPath(vg);
+            nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
+            nvgRect(vg, xpos + screen.x, ypos + screen.y, w, h);
+            nvgStroke(vg);
+        }
     }
 protected:
     unsigned char mR = 250;
@@ -239,6 +117,7 @@ public:
             float ypos = Percent(screen.h, widget.y);
             float width = Percent(screen.w, widget.w);
             float height = Percent(screen.h, widget.h);
+
             DrawText(vg, xpos+screen.x, ypos + screen.y, width, height, mText.c_str(), false, true);
         }
         Widget::Render(vg, screen, widget);
@@ -250,6 +129,84 @@ public:
     }
 
 private:
+    void DrawText(NVGcontext* vg, float xpos, float ypos, float w, float h, const char* msg, bool centreH, bool centreV, bool disable = false)
+    {
+
+        // nvgResetTransform(vg);
+
+        float fontSize = 35.0f;
+
+
+        // Set up font attributes
+        nvgTextAlign(vg, NVG_ALIGN_TOP);
+        nvgFontSize(vg, fontSize);
+        nvgFontBlur(vg, 0);
+
+        // Calc the rect the font will use
+        float bounds[4];
+        nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
+        nvgResetTransform(vg);
+        nvgBeginPath(vg);
+        nvgStrokeColor(vg, nvgRGBA(222, 222, 222, 255));
+
+        float fontX = bounds[0];
+        float fontY = bounds[1];
+        float fontW = bounds[2] - bounds[0];
+        float fontH = bounds[3] - bounds[1];
+
+        // Move to the right if the font will appear outside of the left edge of the rect
+        if (fontX < xpos)
+        {
+            xpos += xpos - fontX;
+        }
+
+        // Center the text rect vertically
+        if (centreV)
+        {
+            ypos += (h / 2) - (fontH / 2);
+        }
+
+        if (centreH)
+        {
+            xpos += (w / 2) - (fontW / 2);
+        }
+        else
+        {
+            // Pad off the left edge a little
+            xpos += 12.0f;
+        }
+
+        // After fixing up get the rect again and debug draw it
+        nvgTextBounds(vg, xpos, ypos, msg, nullptr, bounds);
+        if (gDebugDraw)
+        {
+            nvgRect(vg,
+                bounds[0],
+                bounds[1],
+                fontW,
+                fontH);
+
+            nvgStroke(vg);
+        }
+
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+
+        nvgText(vg, xpos + 2.0f, ypos + 2.0f, msg, nullptr);
+
+        nvgResetTransform(vg);
+        nvgFontSize(vg, fontSize);
+        nvgFontBlur(vg, 0);
+        if (!disable)
+        {
+            nvgFillColor(vg, nvgRGBA(230, 230, 230, 255));
+        }
+        else
+        {
+            nvgFillColor(vg, nvgRGBA(94, 94, 94, 255));
+        }
+        nvgText(vg, xpos, ypos, msg, nullptr);
+    }
+
     std::string mText;
 };
 
@@ -303,7 +260,7 @@ public:
         mG = 255;
         mB = 0;
         Widget::Render(vg, screen, widget);
-        Menus::RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
+        RenderWindow(vg, xpos + screen.x, ypos + screen.y, width, height);
 
         // TODO: Calculate as a pixel amount via percentage of the overall window width
         // Add N pixels for padding to child, but convert back to %
@@ -320,6 +277,49 @@ public:
         Container::Render(vg, screen, widget);
     }
 
+private:
+    static void RenderWindow(NVGcontext* vg, int ix, int iy, int iw, int ih)
+    {
+        const float x = static_cast<float>(ix);
+        const float y = static_cast<float>(iy);
+        const float w = static_cast<float>(iw);
+        const float h = static_cast<float>(ih);
+
+        float rounding = 6.0f;
+
+        // black outline
+        nvgResetTransform(vg);
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(123, 123, 123, 255));
+        nvgRoundedRect(vg, x, y, w, h, rounding);
+        nvgFill(vg);
+
+        // white inner
+        float pad1 = 2.0f;
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(222, 222, 222, 255));
+        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
+        nvgFill(vg);
+
+        // black inner
+        pad1 = 5.0f;
+        nvgBeginPath(vg);
+        nvgFillColor(vg, nvgRGBA(74, 74, 74, 255));
+        nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
+        nvgFill(vg);
+
+        // Gradient window fill
+        float pad2 = 7.0f;
+        nvgResetTransform(vg);
+        nvgTranslate(vg, pad2, pad2);
+        nvgBeginPath(vg);
+        NVGpaint paint = nvgLinearGradient(vg, x, y, w, h, nvgRGBA(0, 0, 155, 255), nvgRGBA(0, 0, 55, 255));
+        nvgFillPaint(vg, paint);
+        nvgRoundedRect(vg, x, y, w - pad2 - pad2, h - pad2 - pad2, rounding);
+        nvgFill(vg);
+
+        nvgResetTransform(vg);
+    }
 };
 
 class Cell : public Container
@@ -507,9 +507,9 @@ private:
 void Menu::Render(NVGcontext* vg)
 {
 
-    WindowRect screen = { 0.0f, 0.0f, screenW, screenH };
+    WindowRect screen = { 0.0f, 0.0f, gScreenW, gScreenH };
 
-    nvgBeginFrame(vg, screenW, screenH, 1.0f);
+    nvgBeginFrame(vg, gScreenW, gScreenH, 1.0f);
 
 
     nvgResetTransform(vg);
@@ -555,7 +555,7 @@ void Menu::Render(NVGcontext* vg)
                     {
                         for (int y2 = 0; y2 < 2; y2++)
                         {
-                            layout2->GetCell(x2, y2).SetWidget(std::make_unique<Label>("T:" + std::to_string(++saveNum) + " " + std::to_string(x2 + 1) + "," + std::to_string(y2 + 1)));
+                            layout2->GetCell(x2, y2).SetWidget(std::make_unique<Label>("T:" + std::to_string(++saveNum) + " (" + std::to_string(x2 + 1) + "," + std::to_string(y2 + 1) + ")"));
                         }
                     }
                     layout->GetCell(x, y).SetWidget(std::move(layout2));
