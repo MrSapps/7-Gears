@@ -424,13 +424,17 @@ public:
             float xPercent = 0.0f;
             for (size_t x = 0; x < mCells[y].size(); x++)
             {
+                float xpos = Percent(tableRect.w, xPercent) + widget.x;
+                float ypos = Percent(tableRect.h, yPercent) + widget.y;
+                float h = Percent(tableRect.h, mCells[y][x].HeightPercent());
+
                 mCells[y][x].Render(vg,
                     WindowRect
                 { 
-                    Percent(tableRect.w, xPercent)+widget.x, 
-                    Percent(tableRect.h, yPercent)+widget.y,
+                    xpos, 
+                    ypos,
                     Percent(tableRect.w, mCells[y][x].WidthPercent()),
-                    Percent(tableRect.h, mCells[y][x].HeightPercent()) 
+                    h 
                 });
 
                 if (mCursorId && y == mRow && x == mCol)
@@ -442,7 +446,7 @@ public:
 
                     
                     // Move the table over by the cursor width so that the cursor appears to the left
-                    WindowRect tableRectAdjustedToTheLeft = { tableRect.x - cursorW, tableRect.y, tableRect.w, tableRect.h };
+                    WindowRect tableRectAdjustedToTheLeft = { xpos - cursorW, ypos + (h/2)-10, 45, 35 };
 
                     img.Render(vg, tableRectAdjustedToTheLeft);
                 }
