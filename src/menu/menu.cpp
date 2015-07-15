@@ -6,8 +6,8 @@
 
 static int gScreenW = 800;
 static int gScreenH = 600;
-static float kScaleX = 2.0f;
-static float kScaleY = 2.0f;
+static float kScaleX = 4.0f;
+static float kScaleY = 4.0f;
 
 static bool gDebugDraw = false;
 
@@ -290,7 +290,7 @@ private:
         const float w = static_cast<float>(iw);
         const float h = static_cast<float>(ih);
 
-        float rounding = 6.0f;
+        float rounding = 6.0f * kScaleX;
 
         // black outline
         nvgResetTransform(vg);
@@ -566,28 +566,9 @@ private:
 
 };
 
-void Menu::Render(NVGcontext* vg)
+
+void Menu::TestUi(const WindowRect& screen, NVGcontext* vg)
 {
-
-    WindowRect screen = { 0.0f, 0.0f, 800.0f, 600.0f };
-
-    nvgBeginFrame(vg, gScreenW*kScaleX, gScreenH*kScaleY, 1.0f);
-
-
-    nvgResetTransform(vg);
-    
-    
-    // Screen rect
-    /*
-    nvgBeginPath(vg);
-    nvgFillColor(vg, nvgRGBA(128, 128, 0, 255));
-    nvgRect(vg, screen.x, screen.y, screen.w, screen.h);
-    nvgFill(vg);
-    */
-
-
-    nvgResetTransform(vg);
-
     TableLayout layout2(2, 1, 0);
     layout2.GetCell(0, 0).SetWidthHeightPercent(75, 100);
 
@@ -688,9 +669,9 @@ void Menu::Render(NVGcontext* vg)
         Percent(screen.w, 100.0f - (13.0f * 2)),
         Percent(screen.h, 14.0f)
     });
-        
 
-    
+
+
     Window test;
     test.SetWidget(std::make_unique<Label>("Testing direct window"));
     test.Render(vg, WindowRect
@@ -700,7 +681,7 @@ void Menu::Render(NVGcontext* vg)
         Percent(screen.w, 50.0f),
         Percent(screen.h, 10.0f)
     });
-    
+
 
     Window nestedWin;
     auto subWin = std::make_unique<Window>();
@@ -709,17 +690,27 @@ void Menu::Render(NVGcontext* vg)
 
     nestedWin.Render(vg, WindowRect
     {
-        Percent(screen.w, 90.0f), 
+        Percent(screen.w, 90.0f),
         Percent(screen.h, 90.0f),
         Percent(screen.w, 10.0f),
         Percent(screen.h, 10.0f)
     });
 
 
+}
 
-   
-   // nvgDeleteImage(vg, id);
+void Menu::Render(NVGcontext* vg)
+{
+    // Fixed virtual screen area
+    WindowRect screen = { 0.0f, 0.0f, 800.0f, 600.0f };
 
+    // Scaled vector rendering area
+    nvgBeginFrame(vg, gScreenW*kScaleX, gScreenH*kScaleY, 1.0f);
+
+    nvgResetTransform(vg);
+
+    TestUi(screen, vg);
+  
     nvgEndFrame(vg);
 }
 
