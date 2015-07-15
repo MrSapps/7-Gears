@@ -4,8 +4,11 @@
 #include <iostream>
 #include <string>
 
-static float gScreenW = 800.0f;
-static float gScreenH = 600.0f;
+static int gScreenW = 800;
+static int gScreenH = 600;
+static float kScaleX = 1.0f;
+static float kScaleY = 1.0f;
+
 static bool gDebugDraw = true;
 
 Menu::Menu()
@@ -45,10 +48,10 @@ public:
     {
         if (gDebugDraw)
         {
-            float xpos = widget.x;// Percent(screen.w, widget.x);
-            float ypos = widget.y;// Percent(screen.h, widget.y);
-            float w = widget.w;// Percent(screen.w, widget.w);
-            float h = widget.h;// Percent(screen.h, widget.h);
+            float xpos = widget.x;
+            float ypos = widget.y;
+            float w = widget.w;
+            float h = widget.h;
 
             nvgBeginPath(vg);
             nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
@@ -74,10 +77,10 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect widget) override
     {
-        float xpos = widget.x;// Percent(screen.w, widget.x);
-        float ypos = widget.y;// Percent(screen.h, widget.y);
-        float w = widget.w; // Percent(screen.w, widget.w);
-        float h = widget.h;// Percent(screen.h, widget.h);
+        float xpos = widget.x;
+        float ypos = widget.y;
+        float w = widget.w;
+        float h = widget.h;
 
         nvgBeginPath(vg);
         NVGpaint imgPaint = nvgImagePattern(vg, xpos, ypos, w,h, 0.0f, mImageId, 1.0f);
@@ -113,10 +116,10 @@ public:
     {
         if (!mText.empty())
         {
-            float xpos = widget.x;// Percent(screen.w, widget.x);
-            float ypos = widget.y;// Percent(screen.h, widget.y);
-            float width = widget.w;// Percent(screen.w, widget.w);
-            float height = widget.h;// Percent(screen.h, widget.h);
+            float xpos = widget.x;
+            float ypos = widget.y;
+            float width = widget.w;
+            float height = widget.h;
 
             DrawText(vg, xpos, ypos , width, height, mText.c_str(), false, true);
         }
@@ -256,10 +259,10 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect widget) override
     {
-        float xpos = widget.x;// Percent(screen.w, widget.x);
-        float ypos = widget.y;// Percent(screen.h, widget.y);
-        float width = widget.w;// Percent(screen.w, widget.w);
-        float height = widget.h;// Percent(screen.h, widget.h);
+        float xpos = widget.x;
+        float ypos = widget.y;
+        float width = widget.w;
+        float height = widget.h;
 
         mR = 0;
         mG = 255;
@@ -267,21 +270,11 @@ public:
         Widget::Render(vg, widget);
         RenderWindow(vg, xpos, ypos, width, height);
 
-        // TODO: Calculate as a pixel amount via percentage of the overall window width
-        // Add N pixels for padding to child, but convert back to %
-        float hackWindowBorderAmount = 6.0f;
-        /*
-        widget.x = xpos + hackWindowBorderAmount, screen.w);
-        widget.y = ToPercent(ypos + hackWindowBorderAmount, screen.h);
-        widget.w = ToPercent(width - (hackWindowBorderAmount * 2), screen.w);
-        widget.h = ToPercent(height - (hackWindowBorderAmount * 2), screen.h);
-        */
-
-        widget.x = xpos + hackWindowBorderAmount;
-        widget.y = ypos + hackWindowBorderAmount;
-        widget.w = width - (hackWindowBorderAmount * 2);
-        widget.h = height - (hackWindowBorderAmount * 2);
-
+        const float borderSize = 6.0f;
+        widget.x = xpos + borderSize;
+        widget.y = ypos + borderSize;
+        widget.w = width - (borderSize * 2);
+        widget.h = height - (borderSize * 2);
 
         mR = 255;
         mG = 0;
@@ -290,7 +283,7 @@ public:
     }
 
 private:
-    static void RenderWindow(NVGcontext* vg, int ix, int iy, int iw, int ih)
+    static void RenderWindow(NVGcontext* vg, float ix, float iy, float iw, float ih)
     {
         const float x = static_cast<float>(ix);
         const float y = static_cast<float>(iy);
@@ -369,7 +362,6 @@ private:
     float mWidthPercent = 1.0f;
     float mHeightPercent = 1.0f;
 };
-#include <assert.h>
 
 class TableLayout : public Container
 {
@@ -401,22 +393,16 @@ public:
 
     void GetCellXYPercentPos(int col, int row, float& x, float& y)
     {
-        for (size_t i = 0; i < row; i++)
+        for (auto i = 0; i < row; i++)
         {
              x += mCells[col][i].WidthPercent();
-
         }
         
-        for (size_t i = 0; i < col; i++)
+        for (auto i = 0; i < col; i++)
         {
             y += mCells[i][row].HeightPercent();
         }
-
-     //   mCells[y][x].Render(vg, tableRect, WindowRect{ x, y, mCells[row][col].WidthPercent(), mCells[row][col].HeightPercent() });
-
-
     }
-
 
     void Render(NVGcontext* vg, WindowRect widget) override
     {
@@ -449,21 +435,16 @@ public:
 
                 if (mCursorId && y == mRow && x == mCol)
                 {
-                    /* TODO FIX ME
                     Image img(mCursorId);
 
                     float cursorW = Percent(tableRect.w, 8.25f);
                     cursorW = cursorW - cursorW / 6;
 
-                    float cellYBottom = Percent(tableRect.h, mCells[y][x].HeightPercent());
-
-                    // Get the point in the middle of the cell vertically
-                    cellYBottom = cellYBottom / 3;
-
+                    
+                    // Move the table over by the cursor width so that the cursor appears to the left
                     WindowRect tableRectAdjustedToTheLeft = { tableRect.x - cursorW, tableRect.y, tableRect.w, tableRect.h };
 
                     img.Render(vg, tableRectAdjustedToTheLeft);
-                    */
                 }
                 
                 xPercent += mCells[y][x].WidthPercent();
@@ -652,8 +633,6 @@ void Menu::Render(NVGcontext* vg)
         });
 
     }
-
-
 
     TableLayout l(1, 1, 0);
     l.GetCell(0, 0).SetWidthHeightPercent(100, 100);
