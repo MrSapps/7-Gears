@@ -6,7 +6,7 @@
 
 static float gScreenW = 800.0f;
 static float gScreenH = 600.0f;
-static bool gDebugDraw = false;
+static bool gDebugDraw = true;
 
 Menu::Menu()
 {
@@ -45,10 +45,10 @@ public:
     {
         if (gDebugDraw)
         {
-            float xpos = Percent(screen.w, widget.x);
-            float ypos = Percent(screen.h, widget.y);
-            float w = Percent(screen.w, widget.w);
-            float h = Percent(screen.h, widget.h);
+            float xpos = widget.x;// Percent(screen.w, widget.x);
+            float ypos = widget.y;// Percent(screen.h, widget.y);
+            float w = widget.w;// Percent(screen.w, widget.w);
+            float h = widget.h;// Percent(screen.h, widget.h);
 
             nvgBeginPath(vg);
             nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
@@ -74,10 +74,10 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
-        float xpos = Percent(screen.w, widget.x);
-        float ypos = Percent(screen.h, widget.y);
-        float w = Percent(screen.w, widget.w);
-        float h = Percent(screen.h, widget.h);
+        float xpos = widget.x;// Percent(screen.w, widget.x);
+        float ypos = widget.y;// Percent(screen.h, widget.y);
+        float w = widget.w; // Percent(screen.w, widget.w);
+        float h = widget.h;// Percent(screen.h, widget.h);
 
         nvgBeginPath(vg);
         NVGpaint imgPaint = nvgImagePattern(vg, xpos + screen.x, ypos + screen.y, w,h, 0.0f, mImageId, 1.0f);
@@ -113,10 +113,10 @@ public:
     {
         if (!mText.empty())
         {
-            float xpos = Percent(screen.w, widget.x);
-            float ypos = Percent(screen.h, widget.y);
-            float width = Percent(screen.w, widget.w);
-            float height = Percent(screen.h, widget.h);
+            float xpos = widget.x;// Percent(screen.w, widget.x);
+            float ypos = widget.y;// Percent(screen.h, widget.y);
+            float width = widget.w;// Percent(screen.w, widget.w);
+            float height = widget.h;// Percent(screen.h, widget.h);
 
             DrawText(vg, xpos+screen.x, ypos + screen.y, width, height, mText.c_str(), false, true);
         }
@@ -239,6 +239,10 @@ protected:
 
 static float ToPercent(float current, float max)
 {
+    if (max = 0.0f)
+    {
+        max = 1.0f;
+    }
     return (current / max) * 100.0f;
 }
 
@@ -252,10 +256,11 @@ public:
 
     virtual void Render(NVGcontext* vg, WindowRect screen, WindowRect widget) override
     {
-        float xpos = Percent(screen.w, widget.x);
-        float ypos = Percent(screen.h, widget.y);
-        float width = Percent(screen.w, widget.w);
-        float height = Percent(screen.h, widget.h);
+        float xpos = widget.x;// Percent(screen.w, widget.x);
+        float ypos = widget.y;// Percent(screen.h, widget.y);
+        float width = widget.w;// Percent(screen.w, widget.w);
+        float height = widget.h;// Percent(screen.h, widget.h);
+
         mR = 0;
         mG = 255;
         mB = 0;
@@ -265,10 +270,17 @@ public:
         // TODO: Calculate as a pixel amount via percentage of the overall window width
         // Add N pixels for padding to child, but convert back to %
         float hackWindowBorderAmount = 6.0f;
-        widget.x = ToPercent(xpos + hackWindowBorderAmount, screen.w);
+        /*
+        widget.x = xpos + hackWindowBorderAmount, screen.w);
         widget.y = ToPercent(ypos + hackWindowBorderAmount, screen.h);
         widget.w = ToPercent(width - (hackWindowBorderAmount * 2), screen.w);
         widget.h = ToPercent(height - (hackWindowBorderAmount * 2), screen.h);
+        */
+
+        widget.x = xpos + hackWindowBorderAmount;
+        widget.y = ypos + hackWindowBorderAmount;
+        widget.w = width - (hackWindowBorderAmount * 2);
+        widget.h = height - (hackWindowBorderAmount * 2);
 
 
         mR = 255;
@@ -412,10 +424,10 @@ public:
         
         // Calc the screen rect for the whole table
         WindowRect tableRect;
-        tableRect.x = Percent(screen.w, widget.x) + screen.x;
-        tableRect.y = Percent(screen.h, widget.y) + screen.y;
-        tableRect.w = Percent(screen.w, widget.w);
-        tableRect.h = Percent(screen.h, widget.h);
+        tableRect.x = widget.x + screen.x;
+        tableRect.y = widget.y + screen.y;
+        tableRect.w = widget.w;
+        tableRect.h = widget.h;
 
         
         float yPercent = 0.0f;
@@ -424,7 +436,15 @@ public:
             float xPercent = 0.0f;
             for (size_t x = 0; x < mCells[y].size(); x++)
             {
-                mCells[y][x].Render(vg, tableRect, WindowRect{ xPercent, yPercent, mCells[y][x].WidthPercent(), mCells[y][x].HeightPercent() });
+                mCells[y][x].Render(vg, tableRect, 
+                    WindowRect
+                { 
+                    Percent(tableRect.w, xPercent), 
+                    Percent(tableRect.h, yPercent),
+                    Percent(tableRect.w, mCells[y][x].WidthPercent()),
+                    Percent(tableRect.h, mCells[y][x].HeightPercent()) 
+                });
+
                 if (mCursorId && y == mRow && x == mCol)
                 {
                     Image img(mCursorId);
@@ -583,8 +603,14 @@ void Menu::Render(NVGcontext* vg)
     auto txt3 = std::make_unique<Window>();
     txt3->SetWidget(std::make_unique<Label>("Load"));
     layout2.GetCell(1, 0).SetWidget(std::move(txt3));
-    layout2.Render(vg, screen, WindowRect{ 0.0f, 0.0f, 100.0f, 9.0f });
-    
+    layout2.Render(vg, screen,
+        WindowRect
+    {
+        Percent(screen.w, 0.0f),
+        Percent(screen.h, 0.0f),
+        Percent(screen.w, 100.0f),
+        Percent(screen.h, 9.0f)
+    });
 
     // Nested table test
 
@@ -616,7 +642,15 @@ void Menu::Render(NVGcontext* vg)
 
         Window win;
         win.SetWidget(std::move(layout));
-        win.Render(vg, screen, WindowRect{ 15.0f, 15.0f, 100.0f - 30.0f, 100.0f - 30.0f });
+        win.Render(vg, screen,
+            WindowRect
+        {
+            Percent(screen.w, 15.0f),
+            Percent(screen.h, 15.0f),
+            Percent(screen.w, 100.0f - 30.0f),
+            Percent(screen.h, 100.0f - 30.0f)
+        });
+
     }
 
 
@@ -626,8 +660,13 @@ void Menu::Render(NVGcontext* vg)
     auto txt1 = std::make_unique<Window>();
     txt1->SetWidget(std::make_unique<Label>("Could be the end of the world..."));
     l.GetCell(0, 0).SetWidget(std::move(txt1));
-    l.Render(vg, screen, WindowRect{ 1, 78, 55, 10 });
-
+    l.Render(vg, screen, WindowRect
+    {
+        Percent(screen.w, 1),
+        Percent(screen.h, 78),
+        Percent(screen.w, 55),
+        Percent(screen.h, 10)
+    });
 
     // Temp cursor
     static int id = nvgCreateImage(vg, "hand.png", 0);
@@ -651,22 +690,40 @@ void Menu::Render(NVGcontext* vg)
             }
         }
     }
-    mSaves->Render(vg, screen, WindowRect{ 13.0f, 62.0f, 100.0f - (13.0f * 2), 14.0f });
-    
+    mSaves->Render(vg, screen, WindowRect
+    {
+        Percent(screen.w, 13.0f),
+        Percent(screen.h, 62.0f),
+        Percent(screen.w, 100.0f - (13.0f * 2)),
+        Percent(screen.h, 14.0f)
+    });
+        
 
     
     Window test;
     test.SetWidget(std::make_unique<Label>("Testing direct window"));
-    test.Render(vg, screen, WindowRect{ 2.0f, 90.0f, 50.0f, 10.0f });
-
-
+    test.Render(vg, screen, WindowRect
+    {
+        Percent(screen.w, 2.0f),
+        Percent(screen.h, 90.0f),
+        Percent(screen.w, 50.0f),
+        Percent(screen.h, 10.0f)
+    });
     
 
     Window nestedWin;
     auto subWin = std::make_unique<Window>();
     subWin->SetWidget(std::make_unique<Window>());
     nestedWin.SetWidget(std::move(subWin));
-    nestedWin.Render(vg, screen, WindowRect{ 90.0f, 90.0f, 10.0f, 10.0f });
+
+    nestedWin.Render(vg, screen,
+        WindowRect
+    {
+        Percent(screen.w, 90.0f), 
+        Percent(screen.h, 90.0f),
+        Percent(screen.w, 10.0f),
+        Percent(screen.h, 10.0f)
+    });
 
 
 
