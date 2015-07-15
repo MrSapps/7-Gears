@@ -6,10 +6,10 @@
 
 static int gScreenW = 800;
 static int gScreenH = 600;
-static float kScaleX = 1.0f;
-static float kScaleY = 1.0f;
+static float kScaleX = 2.0f;
+static float kScaleY = 2.0f;
 
-static bool gDebugDraw = true;
+static bool gDebugDraw = false;
 
 Menu::Menu()
 {
@@ -48,10 +48,10 @@ public:
     {
         if (gDebugDraw)
         {
-            float xpos = widget.x;
-            float ypos = widget.y;
-            float w = widget.w;
-            float h = widget.h;
+            float xpos = widget.x * kScaleX;
+            float ypos = widget.y * kScaleY;
+            float w = widget.w * kScaleX;
+            float h = widget.h * kScaleY;
 
             nvgBeginPath(vg);
             nvgStrokeColor(vg, nvgRGBA(mR, mG, mB, 255));
@@ -83,9 +83,9 @@ public:
         float h = widget.h;
 
         nvgBeginPath(vg);
-        NVGpaint imgPaint = nvgImagePattern(vg, xpos, ypos, w,h, 0.0f, mImageId, 1.0f);
+        NVGpaint imgPaint = nvgImagePattern(vg, xpos* kScaleX, ypos* kScaleY, w* kScaleX, h* kScaleY, 0.0f, mImageId, 1.0f);
         nvgFillPaint(vg, imgPaint);
-        nvgRect(vg, xpos, ypos, w, h);
+        nvgRect(vg, xpos* kScaleX, ypos* kScaleY, w* kScaleX, h* kScaleY);
         nvgFill(vg);
 
         Widget::Render(vg, widget);
@@ -121,7 +121,7 @@ public:
             float width = widget.w;
             float height = widget.h;
 
-            DrawText(vg, xpos, ypos , width, height, mText.c_str(), false, true);
+            DrawText(vg, xpos * kScaleX, ypos * kScaleY, width * kScaleX, height * kScaleY, mText.c_str(), false, true);
         }
         Widget::Render(vg, widget);
     }
@@ -137,7 +137,7 @@ private:
 
         // nvgResetTransform(vg);
 
-        float fontSize = 35.0f;
+        float fontSize = 35.0f * kScaleY;
 
 
         // Set up font attributes
@@ -176,7 +176,7 @@ private:
         else
         {
             // Pad off the left edge a little
-            xpos += 12.0f;
+            xpos += (12.0f* kScaleX);
         }
 
         // After fixing up get the rect again and debug draw it
@@ -194,7 +194,7 @@ private:
 
         nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 
-        nvgText(vg, xpos + 2.0f, ypos + 2.0f, msg, nullptr);
+        nvgText(vg, xpos + (2.0f* kScaleX), ypos + (2.0f* kScaleY), msg, nullptr);
 
         nvgResetTransform(vg);
         nvgFontSize(vg, fontSize);
@@ -268,7 +268,7 @@ public:
         mG = 255;
         mB = 0;
         Widget::Render(vg, widget);
-        RenderWindow(vg, xpos, ypos, width, height);
+        RenderWindow(vg, xpos* kScaleX, ypos* kScaleY, width* kScaleX, height* kScaleY);
 
         const float borderSize = 6.0f;
         widget.x = xpos + borderSize;
@@ -299,22 +299,24 @@ private:
         nvgRoundedRect(vg, x, y, w, h, rounding);
         nvgFill(vg);
 
+        // TODO Padding should be done on X and Y for when XScale!=YScale
+
         // white inner
-        float pad1 = 2.0f;
+        float pad1 = 2.0f* kScaleX;
         nvgBeginPath(vg);
         nvgFillColor(vg, nvgRGBA(222, 222, 222, 255));
         nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
         nvgFill(vg);
 
         // black inner
-        pad1 = 5.0f;
+        pad1 = 5.0f* kScaleX;
         nvgBeginPath(vg);
         nvgFillColor(vg, nvgRGBA(74, 74, 74, 255));
         nvgRoundedRect(vg, x + pad1, y + pad1, w - pad1 - pad1, h - pad1 - pad1, rounding);
         nvgFill(vg);
 
         // Gradient window fill
-        float pad2 = 7.0f;
+        float pad2 = 7.0f* kScaleX;
         nvgResetTransform(vg);
         nvgTranslate(vg, pad2, pad2);
         nvgBeginPath(vg);
@@ -412,10 +414,10 @@ public:
 
         // Calc the screen rect for the whole table
         WindowRect tableRect;
-        tableRect.x = widget.x;
-        tableRect.y = widget.y;
-        tableRect.w = widget.w;
-        tableRect.h = widget.h;
+        tableRect.x = widget.x ;
+        tableRect.y = widget.y ;
+        tableRect.w = widget.w ;
+        tableRect.h = widget.h ;
 
         
         float yPercent = 0.0f;
@@ -424,8 +426,8 @@ public:
             float xPercent = 0.0f;
             for (size_t x = 0; x < mCells[y].size(); x++)
             {
-                float xpos = Percent(tableRect.w, xPercent) + widget.x;
-                float ypos = Percent(tableRect.h, yPercent) + widget.y;
+                float xpos = (Percent(tableRect.w, xPercent) + widget.x);
+                float ypos = (Percent(tableRect.h, yPercent) + widget.y);
                 float h = Percent(tableRect.h, mCells[y][x].HeightPercent());
 
                 mCells[y][x].Render(vg,
@@ -446,7 +448,13 @@ public:
 
                     
                     // Move the table over by the cursor width so that the cursor appears to the left
-                    WindowRect tableRectAdjustedToTheLeft = { xpos - cursorW, ypos + (h/2)-10, 45, 35 };
+                    WindowRect tableRectAdjustedToTheLeft =
+                    { 
+                        (xpos - cursorW),
+                        (ypos + (h / 2) - 10),
+                        (45),
+                        (35)
+                    };
 
                     img.Render(vg, tableRectAdjustedToTheLeft);
                 }
@@ -563,7 +571,7 @@ void Menu::Render(NVGcontext* vg)
 
     WindowRect screen = { 0.0f, 0.0f, 800.0f, 600.0f };
 
-    nvgBeginFrame(vg, gScreenW, gScreenH, 1.0f);
+    nvgBeginFrame(vg, gScreenW*kScaleX, gScreenH*kScaleY, 1.0f);
 
 
     nvgResetTransform(vg);
