@@ -22,6 +22,26 @@ elseif("${arch}" STREQUAL "x86_64")
     set (arch "x64")
 endif()
 
+
+if (MSVC)
+    # Build cpp files on all cores
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP /Wall /wd4351 /wd4514 /wd4350 /wd4710 /wd4571 /wd4820 /wd4668 /wd4626 /wd4625 /wd4365 /wd4640 /wd4628 /wd4061 /wd4826 /wd4127 /wd4711 /wd4738")
+else()
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # C++14 by default
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y -fPIC -Wall")
+    else()
+        # Enable C++14, you may need to use -std=c++0x if using an older gcc compiler
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -fPIC -Wall -pedantic")
+        
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0") # debug, no optimisation
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
+        
+        # we dont want high warning levels on 3rd party things since we won't be fixing those warnings
+        set_source_files_properties(${gmock_src} PROPERTIES COMPILE_FLAGS "-Wno-effc++ -Wno-missing-field-initializers")
+    endif()
+endif()
+
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 
