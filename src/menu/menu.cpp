@@ -247,15 +247,6 @@ protected:
     std::unique_ptr<Widget> mWidget;
 };
 
-static float ToPercent(float current, float max)
-{
-    if (max = 0.0f)
-    {
-        max = 1.0f;
-    }
-    return (current / max) * 100.0f;
-}
-
 class Window : public Container
 {
 public:
