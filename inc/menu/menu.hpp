@@ -20,6 +20,7 @@ private:
     eStates mState = eNone;
 
     void TestUi(const struct WindowRect& screen, NVGcontext* vg);
+    void TestParty(const struct WindowRect& screen, NVGcontext* vg);
 
     std::unique_ptr<class SelectionGrid> mSaves;
 

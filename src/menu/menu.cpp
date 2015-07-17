@@ -6,8 +6,8 @@
 
 static int gScreenW = 800;
 static int gScreenH = 600;
-static float kScaleX = 4.0f;
-static float kScaleY = 4.0f;
+static float kScaleX = 2.0f;
+static float kScaleY = 2.0f;
 
 static bool gDebugDraw = false;
 
@@ -74,6 +74,13 @@ public:
 
     }
 
+    int ImageWidth(NVGcontext* vg) const
+    {
+        int w = 0;
+        int h = 0;
+        nvgImageSize(vg, mImageId, &w, &h);
+        return w;
+    }
 
     virtual void Render(NVGcontext* vg, WindowRect widget) override
     {
@@ -443,16 +450,15 @@ public:
                 {
                     Image img(mCursorId);
 
-                    float cursorW = Percent(tableRect.w, 8.25f);
-                    cursorW = cursorW - cursorW / 6;
+                    float cursorW = img.ImageWidth(vg);
 
                     
                     // Move the table over by the cursor width so that the cursor appears to the left
                     WindowRect tableRectAdjustedToTheLeft =
                     { 
-                        (xpos - cursorW),
+                        (xpos - cursorW + 10),
                         (ypos + (h / 2) - 10),
-                        (45),
+                        (cursorW),
                         (35)
                     };
 
@@ -699,6 +705,88 @@ void Menu::TestUi(const WindowRect& screen, NVGcontext* vg)
 
 }
 
+void Menu::TestParty(const struct WindowRect& screen, NVGcontext* vg)
+{
+    Window nestedWin;
+    auto layout2 = std::make_unique<TableLayout>(1, 3, 0);
+    nestedWin.SetWidget(std::move(layout2));
+    nestedWin.Render(vg, WindowRect
+    {
+        0,
+        25,
+        650,
+        550
+    });
+
+
+    if (!mSaves)
+    {
+        static int id = nvgCreateImage(vg, "hand.png", 0);
+        if (id == 0)
+        {
+            // load failure
+        }
+        mSaves = std::make_unique<SelectionGrid>(id, 1, 11);
+
+        mSaves->GetCell(0, 0).SetWidget(std::make_unique<Label>("Item"));
+        mSaves->GetCell(0, 1).SetWidget(std::make_unique<Label>("Magic"));
+        mSaves->GetCell(0, 2).SetWidget(std::make_unique<Label>("Materia"));
+        mSaves->GetCell(0, 3).SetWidget(std::make_unique<Label>("Equip"));
+        mSaves->GetCell(0, 4).SetWidget(std::make_unique<Label>("Status"));
+        mSaves->GetCell(0, 5).SetWidget(std::make_unique<Label>("Order"));
+        mSaves->GetCell(0, 6).SetWidget(std::make_unique<Label>("Limit"));
+        mSaves->GetCell(0, 7).SetWidget(std::make_unique<Label>("Config"));
+        mSaves->GetCell(0, 8).SetWidget(std::make_unique<Label>("PHS"));
+        mSaves->GetCell(0, 9).SetWidget(std::make_unique<Label>("Save"));
+        mSaves->GetCell(0, 10).SetWidget(std::make_unique<Label>("Quit"));
+
+    }
+    mSaves->Render(vg, WindowRect
+    {
+        600,
+        0,
+        200,
+        410
+    });
+
+
+    auto container = std::make_unique<Window>();
+    auto tbl = std::make_unique<TableLayout>(2, 2, 0);
+    tbl->GetCell(0, 0).SetWidget(std::make_unique<Label>("Time"));
+    tbl->GetCell(1, 0).SetWidget(std::make_unique<Label>("22:33:44"));
+    tbl->GetCell(0, 1).SetWidget(std::make_unique<Label>("Gil"));
+    tbl->GetCell(1, 1).SetWidget(std::make_unique<Label>("9999999"));
+
+    tbl->GetCell(0, 0).SetWidthHeightPercent(35, 50);
+    tbl->GetCell(1, 0).SetWidthHeightPercent(65, 50);
+
+    tbl->GetCell(0, 1).SetWidthHeightPercent(35, 50);
+    tbl->GetCell(1, 1).SetWidthHeightPercent(65, 50);
+
+    container->SetWidget(std::move(tbl));
+
+    TableLayout table(2, 2, 0);
+    table.GetCell(1, 0).SetWidget(std::move(container));
+
+    auto location = std::make_unique<Window>();
+    location->SetWidget(std::make_unique<Label>("North reactor"));
+    table.GetCell(1, 1).SetWidget(std::move(location));
+
+    table.GetCell(0, 0).SetWidthHeightPercent(75, 60);
+    table.GetCell(1, 0).SetWidthHeightPercent(25, 60);
+
+    table.GetCell(0, 1).SetWidthHeightPercent(50, 40);
+    table.GetCell(1, 1).SetWidthHeightPercent(50, 40);
+
+    table.Render(vg, WindowRect
+    {
+        0,
+        450,
+        800,
+        150
+    });
+}
+
 void Menu::Render(NVGcontext* vg)
 {
     // Fixed virtual screen area
@@ -709,8 +797,9 @@ void Menu::Render(NVGcontext* vg)
 
     nvgResetTransform(vg);
 
-    TestUi(screen, vg);
-  
+    //TestUi(screen, vg);
+    TestParty(screen, vg);
+
     nvgEndFrame(vg);
 }
 
