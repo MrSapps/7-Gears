@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/paulsapps/7-Gears.svg?branch=master)](https://travis-ci.org/paulsapps/7-Gears.svg)
+
 This project is a clone of QGears tailored towards getting FF7 100% working.
 
 Current idea/plan is as follows:
