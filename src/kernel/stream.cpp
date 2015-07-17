@@ -4,7 +4,7 @@
 #include <iterator>
 #include "logger.hpp"
 #include "exceptions.hpp"
-#include "kernel\stream.hpp"
+#include "kernel/stream.hpp"
 
 Stream::Stream(std::vector<Uint8>&& data)
 {
