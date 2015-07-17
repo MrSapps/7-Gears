@@ -56,7 +56,7 @@ add_definitions(-DGLEW_STATIC)
 
 
 include_directories(
-    inc
+    ${CMAKE_CURRENT_SOURCE_DIR}/inc
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/nanovg/src
     ${CMAKE_CURRENT_SOURCE_DIR}/3rdParty/glew-1.11.0/include
