@@ -24,4 +24,5 @@ private:
 
     std::unique_ptr<class SelectionGrid> mSaves;
 
+    bool mReset = false;
 };

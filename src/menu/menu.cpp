@@ -698,16 +698,9 @@ void Menu::TestUi(const WindowRect& screen, NVGcontext* vg)
 
 void Menu::TestParty(const struct WindowRect& screen, NVGcontext* vg)
 {
-    Window nestedWin;
+    Window partyWindow;
     auto layout2 = std::make_unique<TableLayout>(1, 3, 0);
-    nestedWin.SetWidget(std::move(layout2));
-    nestedWin.Render(vg, WindowRect
-    {
-        0,
-        25,
-        650,
-        550
-    });
+    partyWindow.SetWidget(std::move(layout2));
 
 
     if (!mSaves)
@@ -732,50 +725,92 @@ void Menu::TestParty(const struct WindowRect& screen, NVGcontext* vg)
         mSaves->GetCell(0, 10).SetWidget(std::make_unique<Label>("Quit"));
 
     }
+
+    auto timeGillWindowContainer = std::make_unique<Window>();
+    auto timeGillTbl = std::make_unique<TableLayout>(2, 2, 0);
+    timeGillTbl->GetCell(0, 0).SetWidget(std::make_unique<Label>("Time"));
+    timeGillTbl->GetCell(1, 0).SetWidget(std::make_unique<Label>("22:33:44"));
+    timeGillTbl->GetCell(0, 1).SetWidget(std::make_unique<Label>("Gil"));
+    timeGillTbl->GetCell(1, 1).SetWidget(std::make_unique<Label>("9999999"));
+
+    timeGillTbl->GetCell(0, 0).SetWidthHeightPercent(35, 50);
+    timeGillTbl->GetCell(1, 0).SetWidthHeightPercent(65, 50);
+
+    timeGillTbl->GetCell(0, 1).SetWidthHeightPercent(35, 50);
+    timeGillTbl->GetCell(1, 1).SetWidthHeightPercent(65, 50);
+
+    timeGillWindowContainer->SetWidget(std::move(timeGillTbl));
+
+ 
+    auto locationWindow = std::make_unique<Window>();
+    locationWindow->SetWidget(std::make_unique<Label>("North reactor"));
+
+
+    static int animPosX = 800;
+    static int animPosY = 600;
+
+    partyWindow.Render(vg, WindowRect
+    {
+        0 + animPosX,
+        25,
+        650,
+        550
+    });
+
+
+
     mSaves->Render(vg, WindowRect
     {
         600,
-        0,
+        0 + animPosY,
         200,
         410
     });
 
+    // fly in from left,right,up,down, fade in, fade out, shrink in, shrink out (window only)
 
-    auto container = std::make_unique<Window>();
-    auto tbl = std::make_unique<TableLayout>(2, 2, 0);
-    tbl->GetCell(0, 0).SetWidget(std::make_unique<Label>("Time"));
-    tbl->GetCell(1, 0).SetWidget(std::make_unique<Label>("22:33:44"));
-    tbl->GetCell(0, 1).SetWidget(std::make_unique<Label>("Gil"));
-    tbl->GetCell(1, 1).SetWidget(std::make_unique<Label>("9999999"));
-
-    tbl->GetCell(0, 0).SetWidthHeightPercent(35, 50);
-    tbl->GetCell(1, 0).SetWidthHeightPercent(65, 50);
-
-    tbl->GetCell(0, 1).SetWidthHeightPercent(35, 50);
-    tbl->GetCell(1, 1).SetWidthHeightPercent(65, 50);
-
-    container->SetWidget(std::move(tbl));
-
-    TableLayout table(2, 2, 0);
-    table.GetCell(1, 0).SetWidget(std::move(container));
-
-    auto location = std::make_unique<Window>();
-    location->SetWidget(std::make_unique<Label>("North reactor"));
-    table.GetCell(1, 1).SetWidget(std::move(location));
-
-    table.GetCell(0, 0).SetWidthHeightPercent(75, 60);
-    table.GetCell(1, 0).SetWidthHeightPercent(25, 60);
-
-    table.GetCell(0, 1).SetWidthHeightPercent(50, 40);
-    table.GetCell(1, 1).SetWidthHeightPercent(50, 40);
-
-    table.Render(vg, WindowRect
+    locationWindow->Render(vg, WindowRect
     {
-        0,
-        450,
-        800,
-        150
+        400,
+        550- animPosY,
+        400,
+        50
     });
+
+
+    timeGillWindowContainer->Render(vg, WindowRect
+    {
+        600 - animPosX,
+        450,
+        200,
+        100
+    });
+
+    if (animPosX > 0)
+    {
+        animPosX-=40;
+        if (animPosX < 0)
+        {
+            animPosX = 0;
+        }
+    }
+
+    if (animPosY > 0)
+    {
+        animPosY -= 30;
+        if (animPosY < 0)
+        {
+            animPosY = 0;
+        }
+    }
+
+    if (mReset)
+    {
+        animPosX = 800;
+        animPosY = 600;
+        mReset = false;
+    }
+   // std::cout << "POS IS " << animPos << std::endl;
 }
 
 void Menu::Render(NVGcontext* vg)
@@ -809,6 +844,7 @@ void Menu::HandleInput(const bool(&buttons)[SDL_CONTROLLER_BUTTON_MAX], const bo
     if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_LEFT])
     {
        // mCursorXPos -= 40.0f;
+        mReset = true;
     }
 
     if (!oldbuttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] && buttons[SDL_CONTROLLER_BUTTON_DPAD_RIGHT])
